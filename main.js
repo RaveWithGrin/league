@@ -23,11 +23,11 @@ var api = require('./apiCaller')(logger);
 var db = require('./dbCaller')(logger);
 var webserver = require('./webserver')(logger, api, db);
 
-webserver.start(logger, api, db);
-
 var staticData = require('./staticData')(logger, api, db);
 var userData = require('./singleUserTest')(logger, api, db);
 var matchData = require('./matchData')(logger, api, db);
+
+webserver.start(logger, api, db, userData, matchData);
 
 var getAllStaticData = async function () {
     var staticDataPromises = [];
