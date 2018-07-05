@@ -1,0 +1,31 @@
+<!-- views/schedule.ejs -->
+<!doctype html>
+<html>
+    <head>
+        <title>League of Legends</title>
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+        <link rel='stylesheet' href='../views/shared.css' type='text/css'/>
+    </head>
+    <body>
+        <div class="container">
+            <div class="masthead">
+                <h3 class="text-muted">League of Legends - Profile</h3>
+                <nav>
+                    <ul class="nav nav-justified">
+                        <li><a href='/profile?user=<%= summoner.name %>'>Profile</a></li>
+                    </ul>
+                </nav>
+                <h3><span class='fa fa-user'></span> <%= summoner.name %></h3>
+                <p>
+                    <strong>ID</strong>: <%= summoner.id %><br>
+                    <strong>AccountID</strong>: <%= summoner.accountId %><br>
+                    <strong>revisionDate</strong>: <%= summoner.revisionDate %><br>
+                    <strong>summonerLevel</strong>: <%= summoner.summonerLevel %><br>
+                </p>
+            </div>
+        </div>
+        <script src='../views/profile.js'></script>
+    </body>
+</html>
