@@ -6,9 +6,10 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var fileName = path.basename(__filename);
 
-module.exports = function(logger, api, db) {
+module.exports = function (logger, api, db, userData) {
     var start = function(){
         var app = express();
+        var expressWs = require('express-ws')(app);
         var port = process.env.PORT || 8082;
 
         app.use(morgan('combined'));
@@ -18,7 +19,7 @@ module.exports = function(logger, api, db) {
 
         app.set('view engine', 'ejs');
 
-        require('./app/routes.js')(app, logger, api, db);
+        require('./app/routes.js')(app, logger, api, db, userData);
 
         app.listen(port);
         logger('info', fileName, 'start', 'The magic happens on port ' + port)

@@ -22,15 +22,15 @@ module.exports = function (logger, api, db) {
     };
 
     var processMatchList = async function (limit = 1) {
-        var newIds = (await db.select.newGames(limit)).data;
-        logger('debug', fileName, 'processMatchList', 'Got ' + newIds.length + ' matches to insert');
+        var newGames = (await db.select.newGames(limit)).data;
+        logger('debug', fileName, 'processMatchList', 'Got ' + newGames.length + ' matches to insert');
         var matchPromises = [];
-        newIds.forEach(async function (id) {
-            matchPromises.push(getMatch(id.id));
+        newGames.forEach(async function (game) {
+            matchPromises.push(getMatch(game));
         });
         await Promise.all(matchPromises);
-        logger('info', fileName, 'processMatchList', 'Inserted ' + newIds.length + ' matches');
-        if (newIds.length === limit) {
+        logger('info', fileName, 'processMatchList', 'Inserted ' + newGames.length + ' matches');
+        if (newGames.length === limit) {
             setTimeout(function () {
                 processMatchList(limit)
             }, 3000);
@@ -39,9 +39,9 @@ module.exports = function (logger, api, db) {
         }
     };
 
-    var getMatch = async function (matchId) {
+    var getMatch = async function (game) {
         return new Promise(async function (resolve, reject) {
-            var matchResponse = await api.match.get(matchId);
+            var matchResponse = await api.match.get(game);
             if (matchResponse.data) {
                 var match = JSON.parse(matchResponse.data);
                 var bans = [];
@@ -50,7 +50,7 @@ module.exports = function (logger, api, db) {
                 delete match.teams[0].bans;
                 delete match.teams[1].bans;
                 match.teams.forEach(async function (team, index) {
-                    team.gameId = matchId;
+                    team.gameId = game.id;
                     var teamResult = await db.insert.teams(team);
                     if (teamResult.data) {
                         var teamId = teamResult.data[0];
@@ -67,11 +67,11 @@ module.exports = function (logger, api, db) {
                         logger('error', fileName, 'getMatch', 'Unable to insert team into DB');
                     }
                 });
-                logger('info', fileName, 'getMatch', 'Teams + Bans inserted for ' + matchId);
+                logger('info', fileName, 'getMatch', 'Teams + Bans inserted for ' + game.id);
                 var summoners = {};
                 for (var id in match.participantIdentities) {
                     if (match.participantIdentities[id].player.hasOwnProperty('summonerId')) {
-                        var summonerResult = await api.summoner.bySummonerID(match.participantIdentities[id].player.summonerId);
+                        var summonerResult = await api.summoner.bySummonerID(match.participantIdentities[id].player.summonerId, game.platformId);
                         if (summonerResult.data) {
                             var summoner = JSON.parse(summonerResult.data);
                             var summonerResult = await db.insert.summoner(summoner);
@@ -84,7 +84,7 @@ module.exports = function (logger, api, db) {
                         summoners[parseInt(id) + 1] = 0;
                     }
                 }
-                logger('info', fileName, 'getMatch', 'Summoners inserted for ' + matchId);
+                logger('info', fileName, 'getMatch', 'Summoners inserted for ' + game.id);
                 match.participants.forEach(async function (participant) {
                     var statsResponse = await db.insert.participantStats(participant.stats);
                     if (statsResponse.data) {
@@ -93,7 +93,7 @@ module.exports = function (logger, api, db) {
                         var timelineResponse = await db.insert.participantTimeline(timeline);
                         if (timelineResponse.data) {
                             var timelineId = timelineResponse.data[0];
-                            participant.gameId = matchId;
+                            participant.gameId = game.id;
                             participant.timelineId = timelineId;
                             participant.statsId = statsId;
                             participant.summonerId = summoners[participant.participantId];
@@ -112,16 +112,16 @@ module.exports = function (logger, api, db) {
                         logger('error', fileName, 'getMatch', 'Unable to insert participant stats into DB');
                     }
                 });
-                logger('info', fileName, 'getMatch', 'Done inserting participants for ' + matchId);
+                logger('info', fileName, 'getMatch', 'Done inserting participants for ' + game.id);
                 delete match.gameId;
                 delete match.teams;
                 delete match.participants;
                 delete match.participantIdentities;
-                var matchResponse = await db.update.match(match, matchId);
+                var matchResponse = await db.update.match(match, game.id);
                 if (matchResponse.error) {
                     logger('error', fileName, 'getMatch', 'Unable to insert match into DB');
                 }
-                logger('info', fileName, 'getMatch', 'Finished: ' + matchId);
+                logger('info', fileName, 'getMatch', 'Finished: ' + game.id);
                 resolve();
             } else {
                 logger('error', fileName, 'getMatch', 'Unable to get match from API');

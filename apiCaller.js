@@ -2,10 +2,11 @@
 var limiter = new riotRateLimiter();
 var path = require('path');
 var fileName = path.basename(__filename);
+var request = require('request-promise');
 
-module.exports = function (logger) {
-    var callAPI = async function (url) {
-        var baseURL = 'https://na1.api.riotgames.com'
+module.exports = function(logger) {
+    var callRiotAPI = async function(url, region = 'na1') {
+        var baseURL = 'https://' + region + '.api.riotgames.com';
         var token = require('./config/token').token;
         logger('silly', fileName, 'callAPI', 'API url: ' + baseURL + url);
         try {
@@ -22,63 +23,87 @@ module.exports = function (logger) {
         }
     };
 
+    var ddragonVersion = async function() {
+        logger('silly', fileName, 'ddragonVersion', 'https://ddragon.leagueoflegends.com/api/versions.json');
+        var response = await request.get('https://ddragon.leagueoflegends.com/api/versions.json');
+        logger('silly', fileName, 'ddragonVersion', 'Response: ' + response);
+        return JSON.parse(response)[0];
+    };
+
+    var callDdragon = async function(url) {
+        var baseURL = 'http://ddragon.leagueoflegends.com/cdn/';
+        var version = await ddragonVersion();
+        var requestURL = baseURL + version + url;
+        logger('silly', fileName, 'callDdragon', 'Ddragon url: ' + requestURL);
+        var response = await request.get(requestURL);
+        logger('silly', fileName, 'callDdragon', 'Ddragon response: ' + response);
+        return { data: JSON.parse(response) };
+    };
+
     var static = {
-        champions: function () {
-            return (callAPI('/lol/static-data/v3/champions'));
+        champions: async function() {
+            return await callRiotAPI('/lol/static-data/v3/champions');
         },
-        items: function () {
-            return (callAPI('/lol/static-data/v3/items'));
+        items: async function() {
+            return await callRiotAPI('/lol/static-data/v3/items');
         },
-        masteries: function () {
-            return (callAPI('/lol/static-data/v3/masteries'));
+        masteries: async function() {
+            return await callRiotAPI('/lol/static-data/v3/masteries');
         },
-        profileIcons: function () {
-            return (callAPI('/lol/static-data/v3/profile-icons'));
+        profileIcons: async function() {
+            return await callRiotAPI('/lol/static-data/v3/profile-icons');
         },
-        runes: function () {
-            return (callAPI('/lol/static-data/v3/reforged-runes'));
+        runes: async function() {
+            return await callRiotAPI('/lol/static-data/v3/reforged-runes');
         },
-        summonerSpells: function () {
-            return (callAPI('/lol/static-data/v3/summoner-spells'));
+        summonerSpells: async function() {
+            return await callRiotAPI('/lol/static-data/v3/summoner-spells');
         },
-        versions: function () {
-            return (callAPI('/lol/static-data/v3/versions'));
+        versions: async function() {
+            return await callRiotAPI('/lol/static-data/v3/versions');
+        }
+    };
+
+    var newStatic = {
+        champions: async function() {
+            return await callDdragon('/data/en_US/champion.json');
         }
     };
 
     var summoner = {
-        byName: function (summonerName) {
-            return (callAPI('/lol/summoner/v3/summoners/by-name/' + summonerName));
+        byName: async function(summonerName) {
+            return await callRiotAPI('/lol/summoner/v3/summoners/by-name/' + summonerName);
         },
-        byAccountID: function (accountID) {
-            return (callAPI('/lol/summoner/v3/summoners/by-account/' + accountID));
+        byAccountID: async function(accountID) {
+            return await callRiotAPI('/lol/summoner/v3/summoners/by-account/' + accountID);
         },
-        bySummonerID: function (summonerID) {
-            return (callAPI('/lol/summoner/v3/summoners/' + summonerID));
+        bySummonerID: async function(summonerID, region) {
+            return await callRiotAPI('/lol/summoner/v3/summoners/' + summonerID, region);
         },
-        matchList: function (accountID, index) {
-            return (callAPI('/lol/match/v3/matchlists/by-account/' + accountID + '?beginIndex=' + index));
+        matchList: async function(accountID, index = 0) {
+            return await callRiotAPI('/lol/match/v3/matchlists/by-account/' + accountID + '?beginIndex=' + index);
         },
-        championMasteries: function (summonerID) {
-            return (callAPI('/lol/champion-mastery/v3/champion-masteries/by-summoner/' + summonerID));
+        championMasteries: async function(summonerID) {
+            return await callRiotAPI('/lol/champion-mastery/v3/champion-masteries/by-summoner/' + summonerID);
         },
-        leaguePosition: function (summonerID) {
-            return (callAPI('/lol/league/v3/positions/by-summoner/' + summonerID));
+        leaguePosition: async function(summonerID) {
+            return await callRiotAPI('/lol/league/v3/positions/by-summoner/' + summonerID);
         }
     };
 
     var match = {
-        get: function (matchID) {
-            return (callAPI('/lol/match/v3/matches/' + matchID));
+        get: async function(game) {
+            return await callRiotAPI('/lol/match/v3/matches/' + game.id, game.platformId);
         },
-        timeline: function (matchID) {
-            return (callAPI('/lol/match/v3/timelines/by-match/' + matchID));
+        timeline: async function(matchID) {
+            return await callRiotAPI('/lol/match/v3/timelines/by-match/' + matchID);
         }
     };
 
     return {
         static: static,
         summoner: summoner,
-        match: match
+        match: match,
+        newStatic: newStatic
     };
 };

@@ -5,15 +5,12 @@ var Promise = require('bluebird');
 
 var fileName = path.basename(__filename);
 
-var myFormat = printf(function (info) {
+var myFormat = printf(function(info) {
     return `${info.timestamp} ${info.level.toUpperCase()} ${info.message}`;
 });
 
 var winstonLogger = createLogger({
-    format: combine(
-        timestamp(),
-        myFormat
-    ),
+    format: combine(timestamp(), myFormat),
     transports: [new transports.Console()],
     level: 'debug'
 });
@@ -21,15 +18,16 @@ var winstonLogger = createLogger({
 var logger = require('./logger')(winstonLogger);
 var api = require('./apiCaller')(logger);
 var db = require('./dbCaller')(logger);
-var webserver = require('./webserver')(logger, api, db);
-
-webserver.start(logger, api, db);
 
 var staticData = require('./staticData')(logger, api, db);
-var userData = require('./singleUserTest')(logger, api, db);
+var userData = require('./userData')(logger, api, db);
 var matchData = require('./matchData')(logger, api, db);
+var userTest = require('./singleUserTest')(logger, api, db);
 
-var getAllStaticData = async function () {
+var webserver = require('./webserver')(logger, api, db, userData);
+//webserver.start();
+
+var getAllStaticData = async function() {
     var staticDataPromises = [];
     staticDataPromises.push(staticData.getChampions());
     staticDataPromises.push(staticData.getItems());
@@ -42,13 +40,19 @@ var getAllStaticData = async function () {
 
 //getAllStaticData();
 
-//userData.mainPipeline('Rave With Grin');
+//userTest.mainPipeline('Rave With Grin');
 
-//matchData.processMatchList(10);
+//matchData.processMatchList(100);
 
-//matchData.fetchNewMatches(3);
+//matchData.fetchNewMatches(10000);
 
-process.on('unhandledRejection', function (error) {
+var test = async function() {
+    //staticData.getChampions();
+};
+
+test();
+
+process.on('unhandledRejection', function(error) {
     console.error(error);
     process.exit(1);
 });
