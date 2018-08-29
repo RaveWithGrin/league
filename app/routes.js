@@ -7,12 +7,26 @@ module.exports = function (app, logger, api, db, userData) {
     });
 
     app.get('/profile', async function (req, res) {
+<<<<<<< HEAD
         if (!req.query)
             res.render('index.ejs');
         else if (!req.query.user)
             res.render('index.ejs');
         else
             res.render('profile.ejs');
+=======
+        logger('debug', fileName, 'getProfile', JSON.stringify(req.query));
+        var summonerResult = await db.select.summoner(req.query.user);
+        if (summonerResult.data) {
+            res.render('profile.ejs', {summoner: summonerResult.data[0]});
+        } else if (summonerResult.data.length > 0) {
+            res.render('profile.ejs', {summoner: {id: 0, accountId: 0, name: 'Searching...', profileIconId: 0, revisionDate: 0, summonerLevel: 0, lastQueried: null}});
+            userData.mainPipeline(req.query.user);
+        } else {
+            logger('error', fileName, 'getProfile', summonerResult.error);
+            res.render('error.ejs');
+        }
+>>>>>>> ef95ca48b94331859f7e5b6d37a56c432e0e01ff
     });
 
     app.get(/^(\/static\/.+)$/, function (req, res) {
@@ -26,6 +40,7 @@ module.exports = function (app, logger, api, db, userData) {
     app.get(/^(\/images\/.+)$/, function (req, res) {
         res.sendFile(path.join(__dirname, '../', req.params[0]));
     });
+<<<<<<< HEAD
 
     app.ws('/summoner', function (ws, req) {
         ws.on('message', async function (msg) {
@@ -105,3 +120,6 @@ module.exports = function (app, logger, api, db, userData) {
         });
     });
 };
+=======
+};
+>>>>>>> ef95ca48b94331859f7e5b6d37a56c432e0e01ff
