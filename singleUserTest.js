@@ -8,9 +8,9 @@ module.exports = function(logger, userData) {
             await userData.get.championMasteries(summoner);
             await userData.get.leaguePosition(summoner);
             await userData.get.matchList(summoner, true);
-            logger.info(`Done getting all data for summonerName=[${summonerName}]`);
+            logger.info('Done getting all data for summonerName=[' + summonerName + ']');
         } else {
-            logger.info(`Unable to process summonerName=[${summonerName}]`);
+            logger.info('Unable to process summonerName=[' + summonerName + ']');
         }
     };
 

@@ -19,7 +19,7 @@ module.exports = function(winston) {
         const CALLER_INDEX = 2;
         const element = stack[CALLER_INDEX];
         const fileName = path.basename(element.getFileName());
-        return `[${element.getFunctionName()}](${fileName}:${element.getLineNumber()})`;
+        return '[' + element.getFunctionName() + '](' + fileName + ':' + element.getLineNumber() + ')';
     }
 
     var logger = {

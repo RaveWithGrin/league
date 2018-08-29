@@ -1,15 +1,14 @@
-var { createLogger, format, transports } = require('winston');
-var { combine, timestamp, label, printf } = format;
+var winston = require('winston');
 var Promise = require('bluebird');
 
-var myFormat = printf(function(info) {
-    return `${info.timestamp} ${info.level.toUpperCase()} ${info.message}`;
+var myFormat = winston.format.printf(function(info) {
+    return info.timestamp + ' ' + info.level.toUpperCase() + ' ' + info.message;
 });
 
-var winstonLogger = createLogger({
-    format: combine(timestamp(), myFormat),
-    transports: [new transports.Console()],
-    level: 'debug'
+var winstonLogger = winston.createLogger({
+    format: winston.format.combine(winston.format.timestamp(), myFormat),
+    transports: [new winston.transports.Console()],
+    level: 'info'
 });
 
 var logger = require('./logger')(winstonLogger);
@@ -21,14 +20,13 @@ var userData = require('./userData')(logger, api, db);
 var matchData = require('./matchData')(logger, api, db);
 var userTest = require('./singleUserTest')(logger, userData);
 
-var webserver = require('./webserver')(logger, api, db, userData);
+var webserver = require('./webserver')(logger, userData, matchData);
 //webserver.start();
 
 var getAllStaticData = async function() {
     var staticDataPromises = [];
     staticDataPromises.push(staticData.getChampions());
     staticDataPromises.push(staticData.getItems());
-    //staticDataPromises.push(staticData.getMasteries());
     staticDataPromises.push(staticData.getRunes());
     staticDataPromises.push(staticData.getSpells());
     staticDataPromises.push(staticData.getSkins());
@@ -38,10 +36,11 @@ var getAllStaticData = async function() {
 
 //getAllStaticData();
 
-//userTest.mainPipeline('Rave With Grin');
-userTest.pipeline('Rave With Grin');
+//userData.get.summoner('Rave With Grin');
 
-//matchData.processMatchList(10);
+//userTest.pipeline('Rave With Grin');
+
+matchData.processMatchList(10);
 
 //matchData.fetchNewMatches(10000);
 

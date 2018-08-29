@@ -22,7 +22,7 @@ module.exports = function(logger, api, db, userData) {
         require('./app/routes.js')(app, logger, api, db, userData);
 
         app.listen(port);
-        logger.info(`Server is running on serverPort=[${port}]`);
+        logger.info('Server is running on serverPort=[' + port + ']');
     };
 
     return {
