@@ -5,10 +5,12 @@ var fileName = path.basename(__filename);
 
 module.exports = function(logger, api, db) {
     var getChampions = async function() {
-        var championsResult = await api.newStatic.champions();
+        logger.debug('Getting champions from API');
+        var championsResult = await api.static.champions();
         if (championsResult.data) {
             var champions = championsResult.data.data;
             var championPromises = [];
+            logger.debug('Inserting champions into DB');
             for (var key in champions) {
                 var champion = {
                     id: champions[key].key,
@@ -21,70 +23,132 @@ module.exports = function(logger, api, db) {
                 championPromises.push(db.insert.champions(champion));
             }
             await Promise.all(championPromises);
-            logger('info', fileName, 'getChampions', 'Done inserting champions');
+            logger.info('Done inserting champions');
         } else {
-            logger('error', fileName, 'getChampions', 'Unable to get champions from API');
+            logger.error('Unable to get champions from API');
         }
     };
 
     var getItems = async function() {
+        logger.debug('Getting items from API');
         var itemsResult = await api.static.items();
         if (itemsResult.data) {
-            var items = JSON.parse(itemsResult.data).data;
+            var items = itemsResult.data.data;
             var itemPromises = [];
+            logger.debug('Inserting items into DB');
             for (var key in items) {
-                itemPromises.push(db.insert.items(items[key]));
+                var item = {
+                    id: key,
+                    name: items[key].name,
+                    description: items[key].description,
+                    plaintext: items[key].plaintext
+                };
+                itemPromises.push(db.insert.items(item));
             }
             await Promise.all(itemPromises);
-            logger('info', fileName, 'getItems', 'Done inserting items');
+            logger.info('Done inserting items');
         } else {
-            logger('error', fileName, 'getItems', 'Unable to get items from API');
+            logger.error('Unable to get items from API');
         }
     };
 
     var getMasteries = async function() {
+        logger.debug('Getting masteries from API');
         var masteriesResult = await api.static.masteries();
         if (masteriesResult.data) {
-            var masteries = JSON.parse(masteriesResult.data).data;
+            var masteries = masteriesResult.data.data;
             var masteryPromises = [];
+            logger.debug('Inserting masteries into DB');
             for (var key in masteries) {
-                masteries[key].description = masteries[key].description.join(', ');
-                masteryPromises.push(db.insert.masteries(masteries[key]));
+                var mastery = {
+                    id: masteries[key].id,
+                    name: masteries[key].name,
+                    description: masteries[key].description.join(', ')
+                };
+                masteryPromises.push(db.insert.masteries(mastery));
             }
             await Promise.all(masteryPromises);
-            logger('info', fileName, 'getMasteries', 'Done inserting masteries');
+            logger.info('Done inserting masteries');
         } else {
-            logger('error', fileName, 'getMasteries', 'Unable to get masteries from API');
+            logger.error('Unable to get masteries from API');
         }
     };
 
     var getRunes = async function() {
+        logger.debug('Getting runes from DB');
         var runesResult = await api.static.runes();
         if (runesResult.data) {
-            runesResult = JSON.parse(runesResult.data);
+            runesResult = runesResult.data;
             var runePromises = [];
+            logger.debug('Inserting runes into DB');
             for (var key in runesResult.data) {
-                runePromises.push(db.insert.runes(runesResult[key]));
+                for (var slot in runesResult[key].slots) {
+                    var rune = {
+                        id: runesResult[key][slot].id,
+                        key: runesResult[key][slot].key,
+                        name: runesResult[key][slot].name,
+                        shortDesc: runesResult[key][slot].shortDesc,
+                        longDesc: runesResult[key][slot].longDesc,
+                        icon: runesResult[key][slot].icon,
+                        runePathId: runesResult[key].id,
+                        runePathName: runesResult[key].name
+                    };
+                    runePromises.push(db.insert.runes(rune));
+                }
             }
             await Promise.all(runePromises);
-            logger('info', fileName, 'getRunes', 'Done inserting runes');
+            logger.info('Done inserting runes');
         } else {
-            logger('error', fileName, 'getRunes', 'Unable to get runes from API');
+            logger.error('Unable to get runes from API');
         }
     };
 
     var getSpells = async function() {
+        logger.debug('Getting summoner spells from API');
         var spellsResult = await api.static.summonerSpells();
-        if (spellsResult.data.data) {
+        if (spellsResult.data) {
+            var spells = spellsResult.data.data;
             var spellPromises = [];
-            for (var key in spellsResult) {
-                spellPromises.push(db.insert.summonerSpells(spellsResult[key]));
+            logger.debug('Inserting summoner spells into DB');
+            for (var key in spells) {
+                var spell = {
+                    id: spells[key].key,
+                    name: spells[key].name,
+                    description: spells[key].description,
+                    summonerLevel: spells[key].summonerLevel,
+                    key: spells[key].id
+                };
+                spellPromises.push(db.insert.summonerSpells(spell));
             }
             await Promise.all(spellPromises);
-            logger('info', fileName, 'getSpells', 'Done inserting spells');
+            logger.info('Done inserting spells');
         } else {
-            logger('error', fileName, 'getSpells', 'Unable to get spells from API');
+            logger.error('Unable to get spells from API');
         }
+    };
+
+    var getSkins = async function() {
+        logger.debug('Getting champion keys from DB');
+        var championKeys = await db.select.championKeys();
+        var skinsPromises = [];
+        logger.debug('Getting skins from API and inserting into DB');
+        championKeys.data.forEach(async function(row) {
+            var championResult = await api.static.skins(row.key);
+            if (championResult.data) {
+                var skins = championResult.data.data[row.key].skins;
+                for (var key in skins) {
+                    var skin = {
+                        id: skins[key].id,
+                        championId: championResult.data.data[row.key].key,
+                        name: skins[key].name,
+                        number: skins[key].num
+                    };
+                    skinsPromises.push(db.insert.skins(skin));
+                }
+            }
+        });
+        await Promise.all(skinsPromises);
+        logger.info('Done inserting skins');
     };
 
     return {
@@ -92,6 +156,7 @@ module.exports = function(logger, api, db) {
         getItems: getItems,
         getMasteries: getMasteries,
         getRunes: getRunes,
-        getSpells: getSpells
+        getSpells: getSpells,
+        getSkins: getSkins
     };
 };

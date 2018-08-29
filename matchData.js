@@ -3,12 +3,12 @@ var path = require('path');
 
 var fileName = path.basename(__filename);
 
-module.exports = function (logger, api, db) {
-    var flattenObject = function (obj) {
+module.exports = function(logger, api, db) {
+    var flattenObject = function(obj) {
         var toReturn = {};
         for (var i in obj) {
             if (!obj.hasOwnProperty(i)) continue;
-            if ((typeof obj[i] === 'object') && (obj[i] !== null)) {
+            if (typeof obj[i] === 'object' && obj[i] !== null) {
                 var flatObject = flattenObject(obj[i]);
                 for (var x in flatObject) {
                     if (!flatObject.hasOwnProperty(x)) continue;
@@ -21,26 +21,26 @@ module.exports = function (logger, api, db) {
         return toReturn;
     };
 
-    var processMatchList = async function (limit = 1) {
+    var processMatchList = async function(limit = 1) {
         var newGames = (await db.select.newGames(limit)).data;
         logger('debug', fileName, 'processMatchList', 'Got ' + newGames.length + ' matches to insert');
         var matchPromises = [];
-        newGames.forEach(async function (game) {
+        newGames.forEach(async function(game) {
             matchPromises.push(getMatch(game));
         });
         await Promise.all(matchPromises);
         logger('info', fileName, 'processMatchList', 'Inserted ' + newGames.length + ' matches');
         if (newGames.length === limit) {
-            setTimeout(function () {
-                processMatchList(limit)
+            setTimeout(function() {
+                processMatchList(limit);
             }, 3000);
         } else {
             logger('info', fileName, 'processMatchList', 'Inserted all matches');
         }
     };
 
-    var getMatch = async function (game) {
-        return new Promise(async function (resolve, reject) {
+    var getMatch = async function(game) {
+        return new Promise(async function(resolve, reject) {
             var matchResponse = await api.match.get(game);
             if (matchResponse.data) {
                 var match = JSON.parse(matchResponse.data);
@@ -49,15 +49,14 @@ module.exports = function (logger, api, db) {
                 bans.push(match.teams[1].bans);
                 delete match.teams[0].bans;
                 delete match.teams[1].bans;
-                match.teams.forEach(async function (team, index) {
+                match.teams.forEach(async function(team, index) {
                     team.gameId = game.id;
                     var teamResult = await db.insert.teams(team);
                     if (teamResult.data) {
-                        var teamId = teamResult.data[0];
-                        bans[index].forEach(async function (ban) {
+                        var teamId = teamResult.data.insertId;
+                        bans[index].forEach(async function(ban) {
                             ban.teamId = teamId;
-                            if (ban.championId < 0)
-                                ban.championId = 0;
+                            if (ban.championId < 0) ban.championId = 0;
                             var banResult = await db.insert.bans(ban);
                             if (banResult.error) {
                                 logger('error', fileName, 'getMatch', 'Unable to insert ban into DB');
@@ -85,14 +84,14 @@ module.exports = function (logger, api, db) {
                     }
                 }
                 logger('info', fileName, 'getMatch', 'Summoners inserted for ' + game.id);
-                match.participants.forEach(async function (participant) {
+                match.participants.forEach(async function(participant) {
                     var statsResponse = await db.insert.participantStats(participant.stats);
                     if (statsResponse.data) {
-                        var statsId = statsResponse.data[0];
+                        var statsId = statsResponse.data.insertId;
                         var timeline = flattenObject(participant.timeline);
                         var timelineResponse = await db.insert.participantTimeline(timeline);
                         if (timelineResponse.data) {
-                            var timelineId = timelineResponse.data[0];
+                            var timelineId = timelineResponse.data.insertId;
                             participant.gameId = game.id;
                             participant.timelineId = timelineId;
                             participant.statsId = statsId;
@@ -129,17 +128,17 @@ module.exports = function (logger, api, db) {
         });
     };
 
-    var fetchNewMatches = async function (limit = 1) {
+    var fetchNewMatches = async function(limit = 1) {
         var summonerResponse = await db.select.unQueriedSummoner(limit);
         if (summonerResponse.data) {
             var unQueriedSummoners = summonerResponse.data;
             logger('debug', fileName, 'fetchNewMatches', 'Fetched ' + unQueriedSummoners.length + ' summoners to query');
-            unQueriedSummoners.forEach(async function (summoner) {
+            unQueriedSummoners.forEach(async function(summoner) {
                 var matchListResponse = await api.summoner.matchList(summoner.accountId, 0);
                 if (matchListResponse.data) {
                     var matchList = JSON.parse(matchListResponse.data).matches;
                     var matchListPromises = [];
-                    matchList.forEach(async function (match) {
+                    matchList.forEach(async function(match) {
                         match.playerId = summoner.id;
                         matchListPromises.push(db.insert.matchList(match));
                     });

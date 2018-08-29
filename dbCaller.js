@@ -1,24 +1,26 @@
 var database = require('./config/database');
 var mysql = require('promise-mysql');
-var path = require('path');
-var fileName = path.basename(__filename);
 
 module.exports = function(logger) {
     var pool = mysql.createPool(database.connection);
 
     var runQuery = async function(sql, options) {
-        var connection = await pool.getConnection();
         try {
-            logger('silly', fileName, 'runQuery', 'DB Query: ' + sql);
-            var result = await connection.query(sql, options);
-            logger('silly', fileName, 'runQuery', 'DB result: ' + JSON.stringify(result));
-            return { data: result };
+            var connection = await pool.getConnection();
+            try {
+                logger.silly(sql);
+                var result = await connection.query(sql, options);
+                logger.silly(JSON.stringify(result));
+                return { data: result };
+            } catch (error) {
+                logger.error(JSON.stringify(error));
+                return { error: error };
+            } finally {
+                connection.release();
+            }
         } catch (error) {
-            logger('error', fileName, 'runQuery', 'DB error: [' + error.code + '] - ' + error.sqlMessage);
-            console.log(JSON.stringify(error, null, 2));
+            logger.error(JSON.stringify(error));
             return { error: error };
-        } finally {
-            connection.release();
         }
     };
 
@@ -34,6 +36,9 @@ module.exports = function(logger) {
                 'INSERT INTO champions SET ? ON DUPLICATE KEY UPDATE title = VALUES(title), tag1 = VALUES(tag1), tag2 = VALUES(tag2)',
                 champion
             );
+        },
+        skins: async function(skin) {
+            return await runQuery('INSERT INTO skins SET ? ON DUPLICATE KEY UPDATE name = VALUES(name)', skin);
         },
         items: async function(item) {
             return await runQuery('INSERT INTO items SET ? ON DUPLICATE KEY UPDATE description = VALUES(description), plaintext = VALUES(plaintext)', item);
@@ -127,6 +132,9 @@ module.exports = function(logger) {
                 'SELECT ml.gameId, ch.name, qu.map, qu.description, se.name, ml.role, ml.lane, ml.timestamp, ma.gameDuration FROM champions ch JOIN matchList ml ON ml.champion = ch.id JOIN queues qu ON qu.id = ml.queue JOIN seasons se ON se.id = ml.season JOIN matches ma ON ma.id = ml.gameId WHERE ml.playerId = ? ORDER BY ml.timestamp DESC;',
                 summonerId
             );
+        },
+        championKeys: async function() {
+            return await runQuery('SELECT `key` FROM champions WHERE id > 0;');
         }
     };
     return {

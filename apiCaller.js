@@ -8,65 +8,62 @@ module.exports = function(logger) {
     var callRiotAPI = async function(url, region = 'na1') {
         var baseURL = 'https://' + region + '.api.riotgames.com';
         var token = require('./config/token').token;
-        logger('silly', fileName, 'callAPI', 'API url: ' + baseURL + url);
+        logger.silly(baseURL + url);
         try {
             var response = await limiter.executing({
                 url: baseURL + url,
                 token: token,
                 resolveWithFullResponse: false
             });
-            logger('silly', fileName, 'callAPI', 'API response: ' + response);
+            logger.silly(JSON.stringify(response));
             return { data: response };
         } catch (error) {
-            logger('error', fileName, 'callAPI', 'API error: ' + error.statusCode + ' - ' + JSON.parse(error.error).status.message + ' @ ' + error.options.url);
+            logger.error(JSON.stringify(error));
+            if (error.statusCode === 403) {
+                logger.error('API token expired');
+            }
             return { error: error };
         }
     };
 
     var ddragonVersion = async function() {
-        logger('silly', fileName, 'ddragonVersion', 'https://ddragon.leagueoflegends.com/api/versions.json');
+        logger.silly('https://ddragon.leagueoflegends.com/api/versions.json');
         var response = await request.get('https://ddragon.leagueoflegends.com/api/versions.json');
-        logger('silly', fileName, 'ddragonVersion', 'Response: ' + response);
+        logger.silly(JSON.stringify(response));
         return JSON.parse(response)[0];
     };
 
     var callDdragon = async function(url) {
         var baseURL = 'http://ddragon.leagueoflegends.com/cdn/';
         var version = await ddragonVersion();
-        var requestURL = baseURL + version + url;
-        logger('silly', fileName, 'callDdragon', 'Ddragon url: ' + requestURL);
+        var requestURL = baseURL + version + '/data/en_US/' + url;
+        logger.silly(requestURL);
         var response = await request.get(requestURL);
-        logger('silly', fileName, 'callDdragon', 'Ddragon response: ' + response);
+        logger.silly(JSON.stringify(response));
         return { data: JSON.parse(response) };
     };
 
     var static = {
         champions: async function() {
-            return await callRiotAPI('/lol/static-data/v3/champions');
+            return await callDdragon('champion.json');
         },
         items: async function() {
-            return await callRiotAPI('/lol/static-data/v3/items');
+            return await callDdragon('item.json');
         },
         masteries: async function() {
-            return await callRiotAPI('/lol/static-data/v3/masteries');
+            return await callDdragon('mastery.json');
         },
         profileIcons: async function() {
-            return await callRiotAPI('/lol/static-data/v3/profile-icons');
+            return await callDdragon('profileicon.json');
         },
         runes: async function() {
-            return await callRiotAPI('/lol/static-data/v3/reforged-runes');
+            return await callDdragon('runesReforged.json');
         },
         summonerSpells: async function() {
-            return await callRiotAPI('/lol/static-data/v3/summoner-spells');
+            return await callDdragon('summoner.json');
         },
-        versions: async function() {
-            return await callRiotAPI('/lol/static-data/v3/versions');
-        }
-    };
-
-    var newStatic = {
-        champions: async function() {
-            return await callDdragon('/data/en_US/champion.json');
+        skins: async function(champion) {
+            return await callDdragon('champion/' + champion + '.json');
         }
     };
 
@@ -103,7 +100,6 @@ module.exports = function(logger) {
     return {
         static: static,
         summoner: summoner,
-        match: match,
-        newStatic: newStatic
+        match: match
     };
 };
