@@ -1,15 +1,29 @@
 ﻿var path = require('path');
 var fileName = path.basename(__filename);
 
-module.exports = function(app, logger, api, db, userData) {
+module.exports = function(app, logger, userData, matchData) {
     app.get('/', function(req, res) {
         res.render('index.ejs');
     });
 
-    app.get('/profile', async function(req, res) {
-        if (!req.query) res.render('index.ejs');
-        else if (!req.query.user) res.render('index.ejs');
-        else res.render('profile.ejs');
+    app.get('/profile', function(req, res) {
+        res.render('profile.ejs');
+    });
+
+    app.get('/championmasteries', function(req, res) {
+        res.render('masteries.ejs');
+    });
+
+    app.get('/matchlist', function(req, res) {
+        res.render('matchlist.ejs');
+    });
+
+    app.get('/match', function(req, res) {
+        res.render('match.ejs');
+    });
+
+    app.get('/stats', function(req, res) {
+        res.render('stats.ejs');
     });
 
     app.get(/^(\/static\/.+)$/, function(req, res) {
@@ -27,6 +41,7 @@ module.exports = function(app, logger, api, db, userData) {
     app.ws('/summoner', function(ws, req) {
         ws.on('message', async function(msg) {
             var message = JSON.parse(msg);
+
             if (message.method) {
                 switch (message.method) {
                     case 'get':
