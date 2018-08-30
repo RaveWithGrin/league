@@ -34,13 +34,20 @@ var getAllStaticData = async function() {
     logger.info('Done getting static data');
 };
 
+var test = async function(){
+    var recent = await db.select.recentSummonerMatchIds('Rave With Grin');
+    console.log(recent.data[0].gameId);
+};
+
+test();
+
 //getAllStaticData();
 
 //userData.get.summoner('Rave With Grin');
 
 //userTest.pipeline('Rave With Grin');
 
-matchData.processMatchList(10);
+//matchData.processMatchList(10);
 
 //matchData.fetchNewMatches(10000);
 

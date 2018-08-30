@@ -23,7 +23,7 @@ module.exports = function(logger, userData, matchData) {
                         } else if (patt4.test(message)) {
                             logger.warn(message.trim());
                         } else {
-                            logger.info(message.trim());
+                            logger.debug(message.trim());
                         }
                     }
                 }

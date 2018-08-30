@@ -135,6 +135,9 @@ module.exports = function(logger) {
         },
         championKeys: async function() {
             return await runQuery('SELECT `key` FROM champions WHERE id > 0;');
+        },
+        recentSummonerMatchIds: async function(summonerName, limit = 1){
+            return await runQuery('SELECT ml.gameId FROM matchList ml JOIN summoner su ON su.id = ml.playerId WHERE su.name = ? order by ml.gameId DESC LIMIT ?', [summonerName, limit]);
         }
     };
     return {

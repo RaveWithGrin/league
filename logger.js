@@ -15,10 +15,10 @@ module.exports = function(winston) {
         }
     }
     function getStack() {
-        const stack = new CustomError().stack;
-        const CALLER_INDEX = 2;
-        const element = stack[CALLER_INDEX];
-        const fileName = path.basename(element.getFileName());
+        var stack = new CustomError().stack;
+        var CALLER_INDEX = 2;
+        var element = stack[CALLER_INDEX];
+        var fileName = path.basename(element.getFileName());
         return '[' + element.getFunctionName() + '](' + fileName + ':' + element.getLineNumber() + ')';
     }
 
