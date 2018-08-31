@@ -10,7 +10,8 @@ module.exports = function(logger, userData) {
             await userData.championMasteries.save(masteries.data);
             var leagues = await userData.leaguePosition.get(summoner);
             await userData.leaguePosition.save(leagues.data);
-            await userData.matchList.process(summoner, true);
+            var matchList = await userData.matchList.get(summoner, true);
+            await userData.matchList.save(summoner, matchList.data);
             logger.info('Done getting all data for summonerName=[' + summonerName + ']');
         } else {
             logger.info('Unable to process summonerName=[' + summonerName + ']');

@@ -2,7 +2,7 @@ var Promise = require('bluebird');
 
 module.exports = function(logger, api, db) {
     var summoner = {
-        get: async function(name){
+        get: async function(name) {
             logger.debug('Getting summoner summonerName=[' + name + '] from API');
             var summonerResult = await api.summoner.byName(name);
             if (summonerResult.error) {
@@ -13,20 +13,20 @@ module.exports = function(logger, api, db) {
                 return { data: summoner };
             }
         },
-        save: async function(summoner){
-            logger.debug('Inserting summoner summonerName=[' + name + '] into DB');
+        save: async function(summoner) {
+            logger.debug('Inserting summoner summonerName=[' + summoner.name + '] into DB');
             var dbResult = await db.insert.summoner(summoner);
             if (dbResult.error) {
-                logger.error('Error inserting summoner summonerName=[' + name + '] into DB');
+                logger.error('Error inserting summoner summonerName=[' + summoner.name + '] into DB');
                 return { error: dbResult.error };
             } else {
-                logger.info('Inserted summoner summonerName=[' + name + '] into DB');
+                logger.info('Inserted summoner summonerName=[' + summoner.name + '] into DB');
                 return { data: summoner };
             }
         }
     };
     var championMasteries = {
-        get: async function(summoner){
+        get: async function(summoner) {
             logger.debug('Getting champion masteries for summonerName=[' + summoner.name + '] from API');
             var masteriesResponse = await api.summoner.championMasteries(summoner.id);
             if (masteriesResponse.error) {
@@ -34,10 +34,10 @@ module.exports = function(logger, api, db) {
                 return { error: masteriesResponse.error };
             } else {
                 var masteriesArray = JSON.parse(masteriesResponse.data);
-                return { data: mastereisArray };
+                return { data: masteriesArray };
             }
         },
-        save: async function(masteriesArray){
+        save: async function(masteriesArray) {
             var masteriesPromises = [];
             logger.debug('Inserting champion masteries for summonerName=[' + summoner.name + '] into DB');
             masteriesArray.forEach(function(mastery) {
@@ -45,16 +45,6 @@ module.exports = function(logger, api, db) {
             });
             await Promise.all(masteriesPromises);
             logger.info('Done inserting champion masteries for summonerName=[' + summoner.name + '] into DB');
-            return { data: 'Done' };
-        },
-        leaguePosition: async function(leaguesArray){
-            var leaguesPromises = [];
-            logger.debug('Inserting league positions for summonerName=[' + summoner.name + '] into DB');
-            leaguesArray.forEach(function(league) {
-                leaguesPromises.push(db.insert.leaguePosition(league));
-            });
-            await Promise.all(leaguesPromises);
-            logger.info('Done inserting league positions for summonerName=[' + summoner.name + '] into DB');
             return { data: 'Done' };
         }
     };
@@ -69,38 +59,53 @@ module.exports = function(logger, api, db) {
                 var leaguesArray = JSON.parse(leagueResponse.data);
                 return { data: leaguesArray };
             }
+        },
+        save: async function(leaguesArray) {
+            var leaguesPromises = [];
+            logger.debug('Inserting league positions for summonerName=[' + summoner.name + '] into DB');
+            leaguesArray.forEach(function(league) {
+                leaguesPromises.push(db.insert.leaguePosition(league));
+            });
+            await Promise.all(leaguesPromises);
+            logger.info('Done inserting league positions for summonerName=[' + summoner.name + '] into DB');
+            return { data: 'Done' };
         }
     };
     var matchList = {
-        get: async function(summoner, full = false){
+        get: async function(summoner, full = false) {
             logger.debug('Getting most recent match for summonerName=[' + summoner.name + '] from DB');
             var recentMatch = await db.select.recentSummonerMatchIds(summoner.name);
-            if (recentMatch.error){
+            if (recentMatch.error) {
                 logger.error('Error getting most recent game ID for summonerName=[' + summoner.name + '] from DB');
                 recentMatch = 0;
             } else {
                 recentMatch = recentMatch.data[0].gameId;
             }
             logger.debug('Getting match list for summonerName=[' + summoner.name + '] from API');
-            var matchlistArray = [];
+            var matchListArray = [];
             var matchlistResponse = await api.summoner.matchList(summoner.accountId);
             if (matchlistResponse.error) {
                 logger.error('Error getting match list for summonerName=[' + summoner.name + '] from API');
                 return { error: matchlistResponse.error };
             } else {
-                var rawMatchlist = JSON.parse(matchlistRespone.data);
-                rawMatchlist.matches.forEach(function(match){
-                    if (
-                    matchlistArray.push(match);
+                var rawMatchlist = JSON.parse(matchlistResponse.data);
+                var newGameFound = false;
+                rawMatchlist.matches.forEach(function(match) {
+                    if (match.gameId > recentMatch) {
+                        matchListArray.push(match);
+                        newGameFound = true;
+                    }
                 });
-                if (matchlistArray.indexOf(recentMatch) !== -1){
-                    return { data: matchlistArray };
-                }
-                if (!full){
-                    return { data: matchlistArray };
+                logger.debug('Got [' + matchListArray.length + '] matches from API');
+                var totalGames = rawMatchlist.totalGames;
+                var endIndex = rawMatchlist.endIndex;
+                if (!newGameFound) {
+                    return { data: matchListArray };
+                } else if (matchListArray.length < endIndex) {
+                    return { data: matchListArray };
+                } else if (!full) {
+                    return { data: matchListArray };
                 } else {
-                    var totalGames = rawMatchlist.totalGames;
-                    var endIndex = rawMatchlist.endIndex;
                     while (totalGames > endIndex) {
                         logger.debug('Getting more matches for summonerName=[' + summoner.name + '] from API');
                         matchlistResponse = await api.summoner.matchList(summoner.accountId, endIndex + 1);
@@ -109,21 +114,38 @@ module.exports = function(logger, api, db) {
                             return { error: matchlistResponse.error };
                         } else {
                             rawMatchlist = JSON.parse(matchlistResponse.data);
-                            rawMatchlist.matches.forEach(function(match){
-                                matchlistArray.push(match);
+                            rawMatchlist.matches.forEach(function(match) {
+                                if (match.gameId > recentMatch) {
+                                    matchListArray.push(match);
+                                    newGameFound = true;
+                                }
                             });
+                            logger.debug('Got [' + matchListArray.length + '] matches from API');
                             totalGames = rawMatchlist.totalGames;
                             endIndex = rawMatchlist.endIndex;
-                            if (matchlistArray.indexOf(recentMatch) !== -1){
+                            if (!newGameFound) {
+                                totalGames = endIndex;
+                            } else if (matchListArray.length < endIndex) {
                                 totalGames = endIndex;
                             }
                         }
                     }
-                    return { data: matchlistArray};
+                    return { data: matchListArray };
                 }
             }
         },
-        process: async function(summoner, full = false){
+        save: async function(summoner, matchListArray) {
+            var matchlistPromises = [];
+            logger.debug('Inserting matches for summonerName=[' + summoner.name + '] into DB');
+            matchListArray.forEach(function(match) {
+                match.playerId = summoner.id;
+                matchlistPromises.push(db.insert.matchList(match));
+            });
+            await Promise.all(matchlistPromises);
+            logger.info('Done inserting all matches for summonerName=[' + summoner.name + '] into DB');
+            return { data: 'Done' };
+        },
+        process: async function(summoner, full = false) {
             logger.debug('Getting match list for summonerName=[' + summoner.name + '] from API');
             var matchlistResponse = await api.summoner.matchList(summoner.accountId);
             if (matchlistResponse.error) {
