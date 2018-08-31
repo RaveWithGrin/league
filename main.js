@@ -8,7 +8,7 @@ var myFormat = winston.format.printf(function(info) {
 var winstonLogger = winston.createLogger({
     format: winston.format.combine(winston.format.timestamp(), myFormat),
     transports: [new winston.transports.Console()],
-    level: 'info'
+    level: 'silly'
 });
 
 var logger = require('./logger')(winstonLogger);
@@ -35,19 +35,19 @@ var getAllStaticData = async function() {
 };
 
 var test = async function(){
-    var recent = await db.select.recentSummonerMatchIds('Rave With Grin');
-    console.log(recent.data[0].gameId);
-};
+    var match = await db.select.newGames(1);
+    match = match.data[0];
+    await matchData.newgetMatch(match);
+}
 
 test();
 
-//getAllStaticData();
 
-//userData.get.summoner('Rave With Grin');
+//getAllStaticData();
 
 //userTest.pipeline('Rave With Grin');
 
-//matchData.processMatchList(10);
+//matchData.processMatchList(25);
 
 //matchData.fetchNewMatches(10000);
 

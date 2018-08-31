@@ -41,6 +41,48 @@ module.exports = function(logger, api, db) {
         }
     };
 
+    var newgetMatch = async function(game){
+        logger.debug('Getting match matchID=[' + game.id + '] from API');
+        var matchResponse = await api.match.get(game);
+        if (matchResponse.data){
+            var match = JSON.parse(matchResponse.data);
+            var summonerIds = [];
+            for (var id in match.participantIdentities){
+                if (match.participantIdentities[id].player.hasOwnProperty('summonerId')){
+                    summonerIds.push(match.participantIdentities[id].player.summonerId);
+                }
+            }
+            var foundSummoners = await db.select.summonerByIds(summonerIds);
+            var summoners = {};
+            if (foundSummoners.data){
+                foundSummoners.data.forEach(function(foundSummoner){
+                    var index = summonerIds.indexOf(foundSummoner.id);
+                    if (index !== -1){
+                        summoners[parseInt(id) + 1] = foundSummoner.id;
+                        summonerIds.splice(index, 1);
+                    }
+                });
+            } else {
+                logger.error('Unable to get known summoners from DB for match matchID=[' + game.id + '] from DB');
+            }
+            summonerIds.forEach(async function(summonerId){
+                var summonerPromises = [];
+                var summonerResult = await api.summoner.bySummonerID(summonerId, game.platformId);
+                if (summonerResult.data){
+                    var summoner = JSON.parse(summonerResult.data);
+                    summonerPromises.push(await db.insert.summoner(summoner));
+                } else {
+                    logger.error('Unable to get summoner summonerID=[' + summonerID + '] for matchID=[' + game.id + '] from API');
+                }
+                await Promise.all(summonerPromises);
+                logger.info('Inserted participant summoners for match matchID=[' + game.id + '] into DB');
+            });
+        } else {
+            logger.error('Unable to get match matchID=[' + game.id + '] from API');
+        }
+    };
+
+
     var getMatch = async function(game) {
         logger.debug('Getting match matchID=[' + game.id + '] from API');
         var matchResponse = await api.match.get(game);
@@ -172,6 +214,7 @@ module.exports = function(logger, api, db) {
     return {
         processMatchList: processMatchList,
         getMatch: getMatch,
-        fetchNewMatches: fetchNewMatches
+        fetchNewMatches: fetchNewMatches,
+        newgetMatch: newgetMatch
     };
 };

@@ -115,8 +115,11 @@ module.exports = function(logger) {
             }
             return result;
         },
-        summoner: async function(username) {
-            return await runQuery('SELECT * FROM summoner WHERE name = ?', username);
+        summonerByName: async function(usernames) {
+            return await runQuery('SELECT * FROM summoner WHERE name IN [?]', usernames);
+        },
+        summonerByIds: async function(ids){
+            return await runQuery('SELECT * FROM summoner WHERE id IN (?)', [ids]);
         },
         championMasteries: async function(summonerId) {
             return await runQuery(
