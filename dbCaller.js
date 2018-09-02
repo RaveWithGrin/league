@@ -108,18 +108,19 @@ module.exports = function(logger) {
             var result = await runQuery('SELECT * FROM summoner WHERE lastQueried IS NULL ORDER BY revisionDate DESC LIMIT ?', [limit]);
             if (result.data) {
                 summoners = result.data;
-                summoners.forEach(function(summoner) {
+                for (var i = 0; i < summoners.length; i++) {
+                    var summoner = summoners[i];
                     summoner.lastQueried = new Date();
                     update.summonerQueryTime(summoner);
-                });
+                }
             }
             return result;
         },
         summonerByName: async function(usernames) {
             return await runQuery('SELECT * FROM summoner WHERE name IN [?]', usernames);
         },
-        summonerByIds: async function(ids){
-            return await runQuery('SELECT * FROM summoner WHERE id IN (?)', [ids]);
+        summonerByIds: async function(ids) {
+            return await runQuery('SELECT * FROM summoner WHERE id IN (?) ORDER BY id ASC', [ids]);
         },
         championMasteries: async function(summonerId) {
             return await runQuery(
@@ -146,9 +147,68 @@ module.exports = function(logger) {
             );
         }
     };
+
+    var transaction = {
+        match: async function(match, gameId) {
+            try {
+                var connection = await pool.getConnection();
+                await connection.beginTransaction();
+                try {
+                    var banPromises = [];
+                    logger.debug('Inserting teams and bans for match matchId=[' + gameId + '] into DB');
+                    for (var i = 0; i < match.teams.length; i++) {
+                        var team = match.teams[i];
+                        var teamResult = await connection.query('INSERT INTO teams SET ?', team);
+                        var teamId = teamResult.insertId;
+                        for (var j = 0; j < match.bans.length; j++) {
+                            var ban = match.bans[j];
+                            if (ban.teamId === team.teamId) {
+                                ban.teamId = teamId;
+                                banPromises.push(await connection.query('INSERT INTO bans SET ?', ban));
+                            }
+                        }
+                    }
+                    await Promise.all(banPromises);
+                    logger.info('Teams and bans inserted for match matchId=[' + gameId + '] into DB');
+                    var participantPromises = [];
+                    logger.debug('Inserting participants and stats and timelines for match matchId=[' + gameId + '] into DB');
+                    for (var i = 0; i < match.participants.length; i++) {
+                        var participant = match.participants[i];
+                        var statsResult = await connection.query('INSERT INTO participantStats SET ?', participant.stats);
+                        var statsId = statsResult.insertId;
+                        var timelineResult = await connection.query('INSERT INTO participantTimeline SET ?', participant.timeline);
+                        var timelineId = timelineResult.insertId;
+                        participant.statsId = statsId;
+                        participant.timelineId = timelineId;
+                        delete participant.stats;
+                        delete participant.timeline;
+                        participantPromises.push(await connection.query('INSERT INTO participants SET ?', participant));
+                    }
+                    await Promise.all(participantPromises);
+                    logger.info('Participants + stats + timeline inserted for match matchId=[' + gameId + '] into DB');
+                    logger.debug('Updating match matchId=[' + gameId + '] in DB');
+                    await connection.query('UPDATE matches SET ? WHERE id = ?', [match.match, gameId]);
+                    logger.info('Match matchId=[' + gameId + '] updated in DB');
+                    connection.commit();
+                    return { data: 'Done' };
+                } catch (error) {
+                    logger.error(error);
+                    await connection.rollback();
+                    return { error: error };
+                } finally {
+                    connection.release();
+                }
+            } catch (error) {
+                logger.error(error);
+                return { error: error };
+            }
+        }
+    };
+
     return {
         insert: insert,
         update: update,
-        select: select
+        select: select,
+        transaction: transaction
     };
 };

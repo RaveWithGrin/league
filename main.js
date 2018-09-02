@@ -8,7 +8,7 @@ var myFormat = winston.format.printf(function(info) {
 var winstonLogger = winston.createLogger({
     format: winston.format.combine(winston.format.timestamp(), myFormat),
     transports: [new winston.transports.Console()],
-    level: 'silly'
+    level: 'debug'
 });
 
 var logger = require('./logger')(winstonLogger);
@@ -34,20 +34,11 @@ var getAllStaticData = async function() {
     logger.info('Done getting static data');
 };
 
-var test = async function(){
-    var match = await db.select.newGames(1);
-    match = match.data[0];
-    await matchData.newgetMatch(match);
-}
-
-test();
-
-
 //getAllStaticData();
 
 //userTest.pipeline('Rave With Grin');
 
-//matchData.processMatchList(25);
+matchData.processMatchList(25);
 
 //matchData.fetchNewMatches(10000);
 

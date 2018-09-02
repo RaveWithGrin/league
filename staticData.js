@@ -132,7 +132,8 @@ module.exports = function(logger, api, db) {
         var championKeys = await db.select.championKeys();
         var skinsPromises = [];
         logger.debug('Getting skins from API and inserting into DB');
-        championKeys.data.forEach(async function(row) {
+        for (var i = 0; i < championKeys.length; i++) {
+            var row = championKeys[i];
             var championResult = await api.static.skins(row.key);
             if (championResult.data) {
                 var skins = championResult.data.data[row.key].skins;
@@ -146,7 +147,7 @@ module.exports = function(logger, api, db) {
                     skinsPromises.push(db.insert.skins(skin));
                 }
             }
-        });
+        }
         await Promise.all(skinsPromises);
         logger.info('Done inserting skins');
     };

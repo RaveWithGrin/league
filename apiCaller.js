@@ -71,20 +71,20 @@ module.exports = function(logger) {
         byName: async function(summonerName) {
             return await callRiotAPI('/lol/summoner/v3/summoners/by-name/' + summonerName);
         },
-        byAccountID: async function(accountID) {
-            return await callRiotAPI('/lol/summoner/v3/summoners/by-account/' + accountID);
+        byAccountId: async function(accountId) {
+            return await callRiotAPI('/lol/summoner/v3/summoners/by-account/' + accountId);
         },
-        bySummonerID: async function(summonerID, region) {
-            return await callRiotAPI('/lol/summoner/v3/summoners/' + summonerID, region);
+        bySummonerId: async function(summonerId, region) {
+            return await callRiotAPI('/lol/summoner/v3/summoners/' + summonerId, region);
         },
-        matchList: async function(accountID, index = 0) {
-            return await callRiotAPI('/lol/match/v3/matchlists/by-account/' + accountID + '?beginIndex=' + index);
+        matchList: async function(accountId, index = 0) {
+            return await callRiotAPI('/lol/match/v3/matchlists/by-account/' + accountId + '?beginIndex=' + index);
         },
-        championMasteries: async function(summonerID) {
-            return await callRiotAPI('/lol/champion-mastery/v3/champion-masteries/by-summoner/' + summonerID);
+        championMasteries: async function(summonerId) {
+            return await callRiotAPI('/lol/champion-mastery/v3/champion-masteries/by-summoner/' + summonerId);
         },
-        leaguePosition: async function(summonerID) {
-            return await callRiotAPI('/lol/league/v3/positions/by-summoner/' + summonerID);
+        leaguePosition: async function(summonerId) {
+            return await callRiotAPI('/lol/league/v3/positions/by-summoner/' + summonerId);
         }
     };
 
@@ -92,8 +92,8 @@ module.exports = function(logger) {
         get: async function(game) {
             return await callRiotAPI('/lol/match/v3/matches/' + game.id, game.platformId);
         },
-        timeline: async function(matchID) {
-            return await callRiotAPI('/lol/match/v3/timelines/by-match/' + matchID);
+        timeline: async function(matchId) {
+            return await callRiotAPI('/lol/match/v3/timelines/by-match/' + matchId);
         }
     };
 
