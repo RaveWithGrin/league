@@ -100,6 +100,7 @@ module.exports = function(logger) {
     return {
         static: static,
         summoner: summoner,
-        match: match
+        match: match,
+        ddragonVersion: ddragonVersion
     };
 };

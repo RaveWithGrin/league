@@ -1,0 +1,85 @@
+a {
+    text-decoration: none !important;
+}
+
+.masteriesBox {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: space-between;
+}
+
+.championBox {
+    width: 120px;
+    margin: 5px;
+    color: black;
+}
+
+.championData {
+    text-align: center;
+}
+
+.level1 {
+    outline: 9px solid black;
+    outline-offset: -9px;
+}
+
+.level2 {
+    outline: 9px solid black;
+    outline-offset: -9px;
+}
+
+.level3 {
+    outline: 9px solid black;
+    outline-offset: -9px;
+}
+
+.level4 {
+    outline: 9px solid rgba(149, 120, 51, 1);
+    outline-offset: -9px;
+}
+
+.level5 {
+    outline: 9px solid rgba(125, 31, 36, 1);
+    outline-offset: -9px;
+}
+
+.level6 {
+    outline: 9px solid rgba(129, 52, 121, 1);
+    outline-offset: -9px;
+}
+
+.level7 {
+    outline: 9px solid rgba(51, 181, 184, 1);
+    outline-offset: -9px;
+}
+
+.progressBox {
+    width: 100%;
+    display: flex;
+}
+
+.progressBar {
+    background-color: gray;
+    border-radius: 10px;
+    height: 16px;
+    flex-grow: 1;
+}
+
+.progress {
+    background-color: aqua;
+    height: 16px;
+    font-size: 12px;
+    text-align: center;
+    border-radius: 10px;
+    color: black;
+}
+
+.points {
+    text-align: center;
+}
+
+.championLevel {
+    width: 10px;
+    text-align: center;
+}

@@ -7,7 +7,7 @@ module.exports = function(logger, userData) {
             summoner = summoner.data;
             await userData.summoner.save(summoner);
             var masteries = await userData.championMasteries.get(summoner);
-            await userData.championMasteries.save(masteries.data);
+            await userData.championMasteries.save(masteries.data, summoner.name);
             var leagues = await userData.leaguePosition.get(summoner);
             await userData.leaguePosition.save(leagues.data);
             var matchList = await userData.matchList.get(summoner, true);

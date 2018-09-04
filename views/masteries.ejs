@@ -1,5 +1,4 @@
-﻿<!-- views/schedule.ejs -->
-<!doctype html>
+﻿<!doctype html>
 <html>
 
 <head>
@@ -8,6 +7,7 @@
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
     <link rel='stylesheet' href='../views/shared.css' type='text/css' />
+    <link rel='stylesheet' href='../views/masteries.css' type='text/css' />
 </head>
 
 <body>
@@ -22,8 +22,29 @@
                     <li><a href='/stats'>Summoner Stats</a></li>
                 </ul>
             </nav>
+            <div class='searchBox'>
+                <input id="usernameBox" placeholder="Username">
+                <button id="usernameButton" onclick="searchUser()">Search</button>
+            </div>
+        </div>
+        <div class='masteriesBox' id='masteriesBox'>
+            <% if (data !== null){ %>
+                <% var champions = data.champions; %>
+                <% for (var i=0 ; i < champions.length; i++){ %>
+                    <% var champion = champions[i]; %>
+                    <a class='championBox'>
+                        <div>
+                            <div class='championImage level<%= champion.championLevel %>'>
+                                <img src='http://ddragon.leagueoflegends.com/cdn/<%= data.version %>/img/champion/<%= champion.key %>.png' alt='<%= champion.key %>'>
+                            </div>
+                            <div class='championData'><%= champion.name %> - <%= champion.championLevel %> - <%= champion.championPoints %> - <%= champion.championPointsUntilNextLevel %> - <%= champion.chestGranted %> - <%= champion.tokensEarned %></div>
+                        </div>
+                    </a>
+                <% } %>
+            <% } %>
         </div>
     </div>
+    <script src='../views/masteries.js'></script>
 </body>
 
 </html>

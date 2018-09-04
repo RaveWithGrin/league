@@ -1,3 +1,3 @@
 module.exports = {
-    token: 'RGAPI-b6729c38-31b9-405c-9dd4-06a596d92100'
+    token: 'RGAPI-88c290c0-9270-4cc3-b527-38f62b2722a4'
 };

@@ -1,32 +1,38 @@
 var Promise = require('bluebird');
-var path = require('path');
-
-var fileName = path.basename(__filename);
 
 module.exports = function(logger, api, db) {
     var getChampions = async function() {
         logger.debug('Getting champions from API');
         var championsResult = await api.static.champions();
         if (championsResult.data) {
-            var champions = championsResult.data.data;
-            var championPromises = [];
-            logger.debug('Inserting champions into DB');
-            for (var key in champions) {
+            var rawChampions = championsResult.data.data;
+            var champions = [];
+            for (var key in rawChampions) {
                 var champion = {
-                    id: champions[key].key,
-                    key: champions[key].id,
-                    name: champions[key].name,
-                    title: champions[key].title,
-                    tag1: champions[key].tags[0],
-                    tag2: champions[key].tags[1]
+                    id: rawChampions[key].key,
+                    key: rawChampions[key].id,
+                    name: rawChampions[key].name,
+                    title: rawChampions[key].title,
+                    tag1: rawChampions[key].tags[0],
+                    tag2: rawChampions[key].tags[1]
                 };
-                championPromises.push(db.insert.champions(champion));
+                champions.push(champion);
             }
-            await Promise.all(championPromises);
-            logger.info('Done inserting champions');
+            return { data: champions };
         } else {
             logger.error('Unable to get champions from API');
+            return { error: 'API error' };
         }
+    };
+
+    var saveChampions = async function(champions) {
+        logger.debug('Inserting champions into DB');
+        var championPromises = [];
+        for (var key in champions) {
+            championPromises.push(db.insert.champions(champions[key]));
+        }
+        await Promise.all(championPromises);
+        logger.info('Done inserting champions');
     };
 
     var getItems = async function() {
@@ -152,12 +158,18 @@ module.exports = function(logger, api, db) {
         logger.info('Done inserting skins');
     };
 
+    var getVersion = async function() {
+        return await api.ddragonVersion();
+    };
+
     return {
         getChampions: getChampions,
+        saveChampions: saveChampions,
         getItems: getItems,
         getMasteries: getMasteries,
         getRunes: getRunes,
         getSpells: getSpells,
-        getSkins: getSkins
+        getSkins: getSkins,
+        getVersion: getVersion
     };
 };

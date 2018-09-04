@@ -25,6 +25,7 @@ module.exports = function(logger, api, db) {
             }
         }
     };
+
     var championMasteries = {
         get: async function(summoner) {
             logger.debug('Getting champion masteries for summonerName=[' + summoner.name + '] from API');
@@ -37,18 +38,19 @@ module.exports = function(logger, api, db) {
                 return { data: masteriesArray };
             }
         },
-        save: async function(masteriesArray) {
+        save: async function(masteriesArray, summonerName) {
             var masteriesPromises = [];
-            logger.debug('Inserting champion masteries for summonerName=[' + summoner.name + '] into DB');
+            logger.debug('Inserting champion masteries for summonerName=[' + summonerName + '] into DB');
             for (var i = 0; i < masteriesArray.length; i++) {
                 var mastery = masteriesArray[i];
                 masteriesPromises.push(db.insert.championMasteries(mastery));
             }
             await Promise.all(masteriesPromises);
-            logger.info('Done inserting champion masteries for summonerName=[' + summoner.name + '] into DB');
+            logger.info('Done inserting champion masteries for summonerName=[' + summonerName + '] into DB');
             return { data: 'Done' };
         }
     };
+
     var leaguePosition = {
         get: async function(summoner) {
             logger.debug('Getting league position for summonerName=[' + summoner.name + '] from API');
@@ -73,6 +75,7 @@ module.exports = function(logger, api, db) {
             return { data: 'Done' };
         }
     };
+
     var matchList = {
         get: async function(summoner, full = false) {
             logger.debug('Getting most recent match for summonerName=[' + summoner.name + '] from DB');
