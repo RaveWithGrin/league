@@ -42,7 +42,10 @@ var displayMasteries = function(champions) {
         html += '<div class="championImage level' + champion.championLevel + '">';
         html += '<img src="http://ddragon.leagueoflegends.com/cdn/' + currentVersion + '/img/champion/' + champion.key + '.png" alt="' + champion.key + '">';
         html += '</div>';
-        html += '<div class="championData">' + champion.name + '</div>';
+        html += '<div class="championData">';
+        html += '<div class="chestBox"><img src="../static/chest' + champion.chestEarned + '.jpg" alt="Chest earned: ' + champion.chestEarned + '"></div>';
+        html += '<div class="championName">' + champion.name + '</div>';
+        html += '</div>';
         html += '</div>';
         var progress;
         if (champion.championLevel < 5) {
