@@ -83,3 +83,21 @@ a {
     width: 10px;
     text-align: center;
 }
+
+.sortBox {
+    display: flex;
+}
+
+.sort {
+    width: 25%;
+    text-align: center;
+}
+
+.filterBox {
+    display: flex;
+}
+
+.filter {
+    width: 50%;
+    text-align: center;
+}

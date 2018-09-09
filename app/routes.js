@@ -11,7 +11,6 @@ module.exports = function(app, logger, staticData, userData, matchData) {
 
     app.get('/championmasteries', async function(req, res) {
         if (req.query.user) {
-            var currentVersion = await staticData.getVersion();
             var summonerResult = await userData.summoner.get(req.query.user);
             if (summonerResult.data) {
                 var summoner = summonerResult.data;
@@ -37,8 +36,7 @@ module.exports = function(app, logger, staticData, userData, matchData) {
                         res.render('masteries.ejs', {
                             data: {
                                 summoner: summoner,
-                                champions: champions,
-                                version: currentVersion
+                                champions: champions
                             }
                         });
                     } else {

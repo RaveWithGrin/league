@@ -10,6 +10,12 @@
     <link rel='stylesheet' href='../views/masteries.css' type='text/css' />
 </head>
 
+<% if (data !== null){ %>
+<% var champions = data.champions; %>
+<% } else { %>
+<% var champions = '' %>
+<% } %>
+
 <body>
     <div class="container">
         <div class="masthead">
@@ -34,45 +40,85 @@
                 <input id="usernameBox" placeholder="Username">
                 <button id="usernameButton" onclick="searchUser()">Search</button>
             </div>
+            <div class='sortBox'>
+                <div class='sort' onclick='sortChampions(<%= JSON.stringify(champions) %>, "name")'>Name</div>
+                <div class='sort' onclick='sortChampions(<%= JSON.stringify(champions) %>, "championPoints")'>Points</div>
+                <div class='sort' onclick='sortChampions(<%= JSON.stringify(champions) %>, "championPointsUntilNextLevel")'>Needed
+                    Points</div>
+                <div class='sort' onclick='sortChampions(<%= JSON.stringify(champions) %>, "progress")'>Progress</div>
+            </div>
+            <div class='filterBox'>
+                <div class='filter'>Chest
+                    <input type='radio' name='chestOption' onclick='filterChest(<%= JSON.stringify(champions) %>, this)'
+                        id='chestAll' value='all' checked>
+                    <label for='chestAll'>All</label>
+                    <input type='radio' name='chestOption' onclick='filterChest(<%= JSON.stringify(champions) %>, this)'
+                        id='chestGranted' value='granted'>
+                    <label for='chestGranted'>Granted</label>
+                    <input type='radio' name='chestOption' onclick='filterChest(<%= JSON.stringify(champions) %>, this)'
+                        id='chestNeeded' value='needed'>
+                    <label for='chestNeeded'>Needed</label>
+                </div>
+                <div class='filter'>Tag
+                    <input type='radio' name='tagOption' onclick='filterTag(<%= JSON.stringify(champions) %>, this)' id='tagAll'
+                        value='all' checked>
+                    <label for='tagAll'>All</label>
+                    <input type='radio' name='tagOption' onclick='filterTag(<%= JSON.stringify(champions) %>, this)' id='tagAssassin'
+                        value='Assassin'>
+                    <label for='tagAssassin'>Assassin</label>
+                    <input type='radio' name='tagOption' onclick='filterTag(<%= JSON.stringify(champions) %>, this)' id='tagFighter'
+                        value='Fighter'>
+                    <label for='tagFighter'>Fighter</label>
+                    <input type='radio' name='tagOption' onclick='filterTag(<%= JSON.stringify(champions) %>, this)' id='tagMage'
+                        value='Mage'>
+                    <label for='tagMage'>Mage</label>
+                    <input type='radio' name='tagOption' onclick='filterTag(<%= JSON.stringify(champions) %>, this)' id='tagSupport'
+                        value='Support'>
+                    <label for='tagSupport'>Support</label>
+                    <input type='radio' name='tagOption' onclick='filterTag(<%= JSON.stringify(champions) %>, this)' id='tagTank'
+                        value='Tank'>
+                    <label for='tagTank'>Tank</label>
+                </div>
+            </div>
         </div>
         <div class='masteriesBox' id='masteriesBox'>
-            <% if (data !== null){ %>
-                <% var champions = data.champions; %>
-                    <% for (var i=0 ; i < champions.length; i++){ %>
-                        <% var champion = champions[i]; %>
-                            <a class='championBox'>
-                                <div>
-                                    <div class='championImage level<%= champion.championLevel %>'>
-                                        <img src='http://ddragon.leagueoflegends.com/cdn/<%= data.version %>/img/champion/<%= champion.key %>.png' alt='<%= champion.key %>'>
-                                    </div>
-                                    <div class='championData'>
-                                        <div class='chestBox'>
-                                            <img src='../static/chest<%= champion.chestEarned %>.jpg' alt='Chest earned: <%= champion.chestEarned %>'>
-                                        </div>
-                                        <div class='championName'>
-                                            <%= champion.name %>
-                                        </div>
-                                    </div>
-                                </div>
-                                <% var progress = (champion.championLevel < 5) ? (100 * (champion.championPoints / (champion.championPoints + champion.championPointsUntilNextLevel)) : (champion.championLevel === 5) ? (100 * (champion.tokensEarned / 2)) : (champion.championLevel === 6) ? (100 * (champion.tokensEarned / 3)) : 100); %>
-                                    <% var points = (champion.championLevel < 5) ? (champion.championPoints + '/' + (champion.championPoints + champion.championPointsUntilNextLevel)) : (champion.championLevel === 5) ? (champion.tokensEarned + '/2 tokens') : (champion.championLevel === 6) ? (champion.tokensEarned + '/3 tokens') : ''); %>
-                                        <div class='progressBox'>
-                                            <div class='championLevel'>
-                                                <%= champion.championLevel %>
-                                            </div>
-                                            <div class='progressBar'>
-                                                <div class='progress' style='width: <%= progress %>;'></div>
-                                            </div>
-                                            <div class='championLevel'>
-                                                <%= champion.championLevel + 1 %>
-                                            </div>
-                                        </div>
-                                        <div class='points'>
-                                            <%= points %>
-                                        </div>
-                            </a>
-                            <% } %>
-                                <% } %>
+            <% if (champions) { %>
+            <% for (var i=0 ; i < champions.length; i++){ %>
+            <% var champion = champions[i]; %>
+            <a class='championBox'>
+                <div>
+                    <div class='championImage level<%= champion.championLevel %>'>
+                        <img src='http://ddragon.leagueoflegends.com/cdn/<%= data.version %>/img/champion/<%= champion.key %>.png'
+                            alt='<%= champion.key %>'>
+                    </div>
+                    <div class='championData'>
+                        <div class='chestBox'>
+                            <img src='../static/chest<%= champion.chestGranted %>.jpg' alt='Chest earned: <%= champion.chestGranted %>'>
+                        </div>
+                        <div class='championName'>
+                            <%= champion.name %>
+                        </div>
+                    </div>
+                    <% var progress = (champion.championLevel < 5) ? (100 * (champion.championPoints / (champion.championPoints + champion.championPointsUntilNextLevel))) : (champion.championLevel === 5) ? (100 * (champion.tokensEarned / 2)) : (champion.championLevel === 6) ? (100 * (champion.tokensEarned / 3)) : 100; %>
+                    <% var points = (champion.championLevel < 5) ? (champion.championPoints + '/' + (champion.championPoints + champion.championPointsUntilNextLevel)) : (champion.championLevel === 5) ? (champion.tokensEarned + '/2 tokens') : (champion.championLevel === 6) ? (champion.tokensEarned + '/3 tokens') : '';  %>
+                    <div class='progressBox'>
+                        <div class='championLevel'>
+                            <%= champion.championLevel %>
+                        </div>
+                        <div class='progressBar'>
+                            <div class='progress' style='width: <%= progress %>;'></div>
+                        </div>
+                        <div class='championLevel'>
+                            <%= champion.championLevel + 1 %>
+                        </div>
+                    </div>
+                    <div class='points'>
+                        <%= points %>
+                    </div>
+                </div>
+            </a>
+            <% } %>
+            <% } %>
         </div>
     </div>
     <script src='../views/masteries.js'></script>
