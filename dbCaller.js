@@ -145,6 +145,9 @@ module.exports = function(logger) {
                 'SELECT ml.gameId FROM matchList ml JOIN summoner su ON su.id = ml.playerId WHERE su.name = ? order by ml.gameId DESC LIMIT ?',
                 [summonerName, limit]
             );
+        },
+        skins: async function(championId) {
+            return await runQuery('SELECT * FROM skins' + (championId ? ' WHERE championId = ?' : ''), championId);
         }
     };
 

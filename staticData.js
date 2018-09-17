@@ -138,6 +138,7 @@ module.exports = function(logger, api, db) {
         var championKeys = await db.select.championKeys();
         var skinsPromises = [];
         logger.debug('Getting skins from API and inserting into DB');
+        championKeys = championKeys.data;
         for (var i = 0; i < championKeys.length; i++) {
             var row = championKeys[i];
             var championResult = await api.static.skins(row.key);

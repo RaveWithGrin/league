@@ -20,7 +20,7 @@ var userData = require('./userData')(logger, api, db);
 var matchData = require('./matchData')(logger, api, db);
 var userTest = require('./singleUserTest')(logger, userData);
 
-var webserver = require('./webserver')(logger, staticData, userData, matchData);
+var webserver = require('./webserver')(logger, staticData, userData, matchData, db);
 webserver.start();
 
 var getAllStaticData = async function() {

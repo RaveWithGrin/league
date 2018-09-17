@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>League of Legends</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+    <link rel='stylesheet' href='../views/shared.css' type='text/css' />
+    <link rel='stylesheet' href='../views/champions.css' type='text/css' />
+</head>
+
+<% if (data !== null){ %>
+<% var champion = data.champion; %>
+<% var summoner = data.summoner; %>
+<% } else { %>
+<% var champion = ''; %>
+<% var summoner = ''; %>
+<% } %>
+
+<body>
+    <div class="container">
+        <div class="masthead">
+            <h3 class="text-muted">League of Legends</h3>
+            <nav>
+                <ul class="nav nav-justified">
+                    <li>
+                        <a href='/profile'>Profile</a>
+                    </li>
+                    <li>
+                        <a href='/championmasteries'>Champion Masteries</a>
+                    </li>
+                    <li>
+                        <a href='/matchlist'>Matchlist</a>
+                    </li>
+                    <li>
+                        <a href='/stats'>Summoner Stats</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class='searchBox'>
+                <input id="usernameBox" placeholder="Username">
+                <button id="usernameButton" onclick="searchUser()">Search</button>
+            </div>
+        </div>
+        <% var randomSkin = data.skins[Math.floor(Math.random() * data.skins.length)]; %>
+        <img src='http://ddragon.leagueoflegends.com/cdn/img/champion/loading/<%= champion.key %>_<%= randomSkin.number %>.jpg' alt='<%= champion.key %>'>
+    </div>
+    <script src='../views/champions.js'></script>
+</body>
+
+</html>
