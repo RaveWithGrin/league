@@ -25,8 +25,10 @@ webserver.start();
 
 var getAllStaticData = async function() {
     var staticDataPromises = [];
-    staticDataPromises.push(staticData.getChampions());
-    staticDataPromises.push(staticData.getItems());
+    var champions = await staticData.getChampions();
+    staticDataPromises.push(staticData.saveChampions(champions.data));
+    var items = await staticData.getItems();
+    staticDataPromises.push(staticData.saveItems(items.data));
     staticDataPromises.push(staticData.getRunes());
     staticDataPromises.push(staticData.getSpells());
     staticDataPromises.push(staticData.getSkins());

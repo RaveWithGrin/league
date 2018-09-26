@@ -3,6 +3,7 @@ var champions = [];
 var currentSort = 'name';
 var currentChestFilter = 'all';
 var currentTagFilter = 'all';
+var summoner;
 
 // On load
 $(function() {
@@ -20,6 +21,14 @@ $(function() {
         }
     });
 });
+
+var setVariables = function(data) {
+    if (data) {
+        currentVersion = data.version;
+        champions = data.champions;
+        summoner = data.summoner;
+    }
+};
 
 // Return paramter value from URL if it exists, true if no value, false if parameter is missing
 var getURLParamter = function(param) {
@@ -66,13 +75,13 @@ $('#usernameBox').on('keyup', function(event) {
 // Retrieve masteries from server, alert if there was an error
 var parseMasteries = function(result) {
     var result = JSON.parse(result);
-    if (result.data) {
+    if (result.error) {
+        alert(result.error);
+    } else {
         var summoner = result.data.summoner;
         champions = result.data.champions;
         setProgress();
         updateList();
-    } else {
-        alert(result.error);
     }
 };
 
@@ -150,11 +159,7 @@ var championSort = function(property) {
 };
 
 // Function called when one of the sort buttons are clicked
-var updateSort = function(originalChampions, property) {
-    // If we pass in a non-empty list for original champions, update our global variable, this would be from EJS
-    if (originalChampions !== '') {
-        champions = originalChampions;
-    }
+var updateSort = function(property) {
     // Only attempt to do anything if we actually have retrieved masteries
     if (champions.length > 0) {
         setProgress();
@@ -168,11 +173,7 @@ var updateSort = function(originalChampions, property) {
 };
 
 // Function called when one of the chest filters is changed
-var updateChestFilter = function(originalChampions, chestButton) {
-    // If we pass in a non-empty list for original champions, update our global variable, this would be from EJS
-    if (originalChampions !== '') {
-        champions = originalChampions;
-    }
+var updateChestFilter = function(chestButton) {
     // Only attempt to do anything if we actually have retrieved masteries
     if (champions.length > 0) {
         setProgress();
@@ -185,11 +186,8 @@ var updateChestFilter = function(originalChampions, chestButton) {
     }
 };
 
-var updateTagFilter = function(originalChampions, tagButton) {
-    // If we pass in a non-empty list for original champions, update our global variable, this would be from EJS
-    if (originalChampions !== '') {
-        champions = originalChampions;
-    }
+var updateTagFilter = function(tagButton) {
+    ``;
     // Only attempt to do anything if we actually have retrieved masteries
     if (champions.length > 0) {
         setProgress();

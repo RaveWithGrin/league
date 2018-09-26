@@ -7,7 +7,7 @@ module.exports = function(logger, api, db) {
             var summonerResult = await api.summoner.byName(name);
             if (summonerResult.error) {
                 logger.error('Error getting summoner summonerName=[' + name + '] from API');
-                return { error: summonerResult.error };
+                return summonerResult;
             } else {
                 var summoner = JSON.parse(summonerResult.data);
                 return { data: summoner };
@@ -18,7 +18,7 @@ module.exports = function(logger, api, db) {
             var dbResult = await db.insert.summoner(summoner);
             if (dbResult.error) {
                 logger.error('Error inserting summoner summonerName=[' + summoner.name + '] into DB');
-                return { error: dbResult.error };
+                return dbResult;
             } else {
                 logger.info('Inserted summoner summonerName=[' + summoner.name + '] into DB');
                 return { data: summoner };
@@ -32,7 +32,7 @@ module.exports = function(logger, api, db) {
             var masteriesResponse = await api.summoner.championMasteries(summoner.id);
             if (masteriesResponse.error) {
                 logger.error('Error getting champion masteries for summonerName=[' + summoner.name + '] from API');
-                return { error: masteriesResponse.error };
+                return masteriesResponse;
             } else {
                 var masteriesArray = JSON.parse(masteriesResponse.data);
                 return { data: masteriesArray };
@@ -57,7 +57,7 @@ module.exports = function(logger, api, db) {
             var leagueResponse = await api.summoner.leaguePosition(summoner.id);
             if (leagueResponse.error) {
                 logger.error('Error getting league position for summonerName=[' + summoner.name + '] from API');
-                return { error: leagueResponse.error };
+                return leagueResponse;
             } else {
                 var leaguesArray = JSON.parse(leagueResponse.data);
                 return { data: leaguesArray };
@@ -91,7 +91,7 @@ module.exports = function(logger, api, db) {
             var matchlistResponse = await api.summoner.matchList(summoner.accountId);
             if (matchlistResponse.error) {
                 logger.error('Error getting match list for summonerName=[' + summoner.name + '] from API');
-                return { error: matchlistResponse.error };
+                return matchlistResponse;
             } else {
                 var rawMatchlist = JSON.parse(matchlistResponse.data);
                 var newGameFound = false;
@@ -117,7 +117,7 @@ module.exports = function(logger, api, db) {
                         matchlistResponse = await api.summoner.matchList(summoner.accountId, endIndex + 1);
                         if (matchlistResponse.error) {
                             logger.error('Error getting match list for summonerName=[' + summoner.name + '] from API');
-                            return { error: matchlistResponse.error };
+                            return matchlistResponse;
                         } else {
                             rawMatchlist = JSON.parse(matchlistResponse.data);
                             for (var i = 0; i < rawMatchlist.matches.length; i++) {
@@ -158,7 +158,7 @@ module.exports = function(logger, api, db) {
             var matchlistResponse = await api.summoner.matchList(summoner.accountId);
             if (matchlistResponse.error) {
                 logger.error('Error getting match list for summonerName=[' + summoner.name + '] from API');
-                return { error: matchlistResponse.error };
+                return matchlistResponse;
             } else {
                 var matchlistArray = JSON.parse(matchlistResponse.data).matches;
                 var matchlistPromises = [];
@@ -181,7 +181,7 @@ module.exports = function(logger, api, db) {
                         matchlistResponse = await api.summoner.matchList(summoner.accountId, endIndex + 1);
                         if (matchlistResponse.error) {
                             logger.error('Error getting match list for summonerName=[' + summoner.name + '] from API');
-                            return { error: matchlistResponse.error };
+                            return matchlistResponse;
                         } else {
                             matchlistArray = JSON.parse(matchlistResponse.data).matches;
                             matchlistPromises = [];

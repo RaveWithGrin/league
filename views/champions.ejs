@@ -43,10 +43,19 @@
                 <button id="usernameButton" onclick="searchUser()">Search</button>
             </div>
         </div>
-        <% var randomSkin = data.skins[Math.floor(Math.random() * data.skins.length)]; %>
-        <img src='http://ddragon.leagueoflegends.com/cdn/img/champion/loading/<%= champion.key %>_<%= randomSkin.number %>.jpg' alt='<%= champion.key %>'>
+        <div class='statsBox'>
+            <% var randomSkin = data.skins[Math.floor(Math.random() * data.skins.length)]; %>
+            <img src='http://ddragon.leagueoflegends.com/cdn/img/champion/loading/<%= champion.key %>_<%= randomSkin.number %>.jpg' alt='<%= champion.key %>' style='height: 560px'>
+            <div class='gamesBox' id='gamesBox'>
+
+            </div>
+        </div>
     </div>
     <script src='../views/champions.js'></script>
+    <script>
+        var data = <%- JSON.stringify(data) %>;
+        setVariables(data);
+    </script>
 </body>
 
 </html>

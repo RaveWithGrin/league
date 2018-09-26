@@ -22,7 +22,9 @@ module.exports = function(logger, api, db) {
         logger.info('Getting non-processed matches from DB');
         logger.debug('Getting [' + limit + '] game(s) from DB');
         var newGames = await db.select.newGames(limit);
-        if (newGames.data) {
+        if (newGames.error) {
+            logger.error('Unable to get new games from DB');
+        } else {
             newGames = newGames.data;
             logger.debug('Got [' + newGames.length + '] game(s) from DB');
             var matchPromises = [];
@@ -40,8 +42,6 @@ module.exports = function(logger, api, db) {
             } else {
                 logger.info('All games in DB processed');
             }
-        } else {
-            logger.error('Unable to get new games from DB');
         }
     };
 
@@ -57,15 +57,15 @@ module.exports = function(logger, api, db) {
         }
         logger.debug('Getting known summoners from DB for match matchId=[' + gameId + '] from DB');
         var foundSummoners = await db.select.summonerByIds(summonerIds);
-        if (foundSummoners.data) {
+        if (foundSummoners.error) {
+            logger.error('Unable to get known summoners from DB for match matchId=[' + gameId + '] from DB');
+        } else {
             for (var i = 0; i < foundSummoners.data.length; i++) {
                 var foundSummoner = foundSummoners.data[i];
                 var index = summonerIds.indexOf(foundSummoner.id);
                 summoners[index + 1] = foundSummoner.id;
                 summonerIds[index] = null;
             }
-        } else {
-            logger.error('Unable to get known summoners from DB for match matchId=[' + gameId + '] from DB');
         }
         for (var i = 0; i < summonerIds.length; i++) {
             if (summonerIds[i] === null) {
@@ -78,12 +78,12 @@ module.exports = function(logger, api, db) {
             var summonerId = summonerIds[i];
             logger.debug('Getting summoner summonerId=[' + summonerId + '] for matchId=[' + gameId + '] from API');
             var summonerResult = await api.summoner.bySummonerId(summonerId, platformId);
-            if (summonerResult.data) {
+            if (summonerResult.error) {
+                logger.error('Unable to get summoner summonerId=[' + summonerId + '] for matchId=[' + gameId + '] from API');
+            } else {
                 var summoner = JSON.parse(summonerResult.data);
                 logger.debug('Inserting summoner summonerId=[' + summonerId + '] for matchId=[' + gameId + '] into DB');
                 summonerPromises.push(db.insert.summoner(summoner));
-            } else {
-                logger.error('Unable to get summoner summonerId=[' + summonerId + '] for matchId=[' + gameId + '] from API');
             }
         }
         await Promise.all(summonerPromises);
@@ -122,7 +122,9 @@ module.exports = function(logger, api, db) {
     var getMatch = async function(game) {
         logger.debug('Getting match matchId=[' + game.id + '] from API');
         var matchResponse = await api.match.get(game);
-        if (matchResponse.data) {
+        if (matchResponse.error) {
+            logger.error('Unable to get match matchId=[' + game.id + '] from API');
+        } else {
             var match = JSON.parse(matchResponse.data);
             var summoners = await handleSummoners(match.participantIdentities, game.id, game.platformId);
             var matchData = await handleTeams(match.teams, game.id);
@@ -134,27 +136,29 @@ module.exports = function(logger, api, db) {
             matchData.match = match;
             logger.debug('Sending match matchId=[' + game.id + '] to DB');
             var result = await db.transaction.match(matchData, game.id);
-            if (result.data) {
-                logger.info('Match matchId=[' + game.id + '] inserted into DB');
-            } else {
+            if (result.error) {
                 logger.error('Unable to insert match matchId=[' + game.id + '] into DB');
+            } else {
+                logger.info('Match matchId=[' + game.id + '] inserted into DB');
             }
-        } else {
-            logger.error('Unable to get match matchId=[' + game.id + '] from API');
         }
     };
 
     var fetchNewMatches = async function(limit = 1) {
         logger.debug('Getting un-fetched summoner(s) from DB');
         var summonerResponse = await db.select.unQueriedSummoner(limit);
-        if (summonerResponse.data) {
+        if (summonerResponse.error) {
+            logger.error('Unable to get un-fetched summoner(s) from DB');
+        } else {
             var unQueriedSummoners = summonerResponse.data;
             logger.debug('Got [' + unQueriedSummoners.length + '] to fetch from DB');
             for (var i = 0; i < unQueriedSummoners.length; i++) {
                 var summoner = unQueriedSummoners[i];
                 logger.debug('Getting matchlist for summonerName=[' + summoner.name + '] from API');
                 var matchListResponse = await api.summoner.matchList(summoner.accountId, 0);
-                if (matchListResponse.data) {
+                if (matchListResponse.error) {
+                    logger.error('Unable to get matchlist for summonerName=[' + summoner.name + '] from API');
+                } else {
                     var matchList = JSON.parse(matchListResponse.data).matches;
                     var matchListPromises = [];
                     for (var j = 0; j < matchList.length; j++) {
@@ -165,12 +169,8 @@ module.exports = function(logger, api, db) {
                     }
                     await Promise.all(matchListPromises);
                     logger.info('Inserted [' + matchList.length + '] matches for summoner summonerName=[' + summoner.name + '] into DB');
-                } else {
-                    logger.error('Unable to get matchlist for summonerName=[' + summoner.name + '] from API');
                 }
             }
-        } else {
-            logger.error('Unable to get un-fetched summoner(s) from DB');
         }
     };
 

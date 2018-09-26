@@ -3,7 +3,9 @@
 module.exports = function(logger, userData) {
     var pipeline = async function(summonerName) {
         var summoner = await userData.summoner.get(summonerName);
-        if (summoner.data) {
+        if (summoner.error) {
+            logger.info('Unable to process summonerName=[' + summonerName + ']');
+        } else {
             summoner = summoner.data;
             await userData.summoner.save(summoner);
             var masteries = await userData.championMasteries.get(summoner);
@@ -13,8 +15,6 @@ module.exports = function(logger, userData) {
             var matchList = await userData.matchList.get(summoner, true);
             await userData.matchList.save(summoner, matchList.data);
             logger.info('Done getting all data for summonerName=[' + summonerName + ']');
-        } else {
-            logger.info('Unable to process summonerName=[' + summonerName + ']');
         }
     };
 

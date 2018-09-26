@@ -4,7 +4,10 @@ module.exports = function(logger, api, db) {
     var getChampions = async function() {
         logger.debug('Getting champions from API');
         var championsResult = await api.static.champions();
-        if (championsResult.data) {
+        if (championsResult.error) {
+            logger.error('Unable to get champions from API');
+            return championsResult;
+        } else {
             var rawChampions = championsResult.data.data;
             var champions = [];
             for (var key in rawChampions) {
@@ -19,9 +22,6 @@ module.exports = function(logger, api, db) {
                 champions.push(champion);
             }
             return { data: champions };
-        } else {
-            logger.error('Unable to get champions from API');
-            return { error: 'API error' };
         }
     };
 
@@ -38,30 +38,36 @@ module.exports = function(logger, api, db) {
     var getItems = async function() {
         logger.debug('Getting items from API');
         var itemsResult = await api.static.items();
-        if (itemsResult.data) {
-            var items = itemsResult.data.data;
-            var itemPromises = [];
-            logger.debug('Inserting items into DB');
-            for (var key in items) {
-                var item = {
-                    id: key,
-                    name: items[key].name,
-                    description: items[key].description,
-                    plaintext: items[key].plaintext
-                };
-                itemPromises.push(db.insert.items(item));
-            }
-            await Promise.all(itemPromises);
-            logger.info('Done inserting items');
-        } else {
+        if (itemsResult.error) {
             logger.error('Unable to get items from API');
+        } else {
+            var items = itemsResult.data.data;
+            return { data: items };
         }
+    };
+
+    var saveItems = async function(items) {
+        var itemPromises = [];
+        logger.debug('Inserting items into DB');
+        for (var key in items) {
+            var item = {
+                id: key,
+                name: items[key].name,
+                description: items[key].description,
+                plaintext: items[key].plaintext
+            };
+            itemPromises.push(db.insert.items(item));
+        }
+        await Promise.all(itemPromises);
+        logger.info('Done inserting items');
     };
 
     var getMasteries = async function() {
         logger.debug('Getting masteries from API');
         var masteriesResult = await api.static.masteries();
-        if (masteriesResult.data) {
+        if (masteriesResult.error) {
+            logger.error('Unable to get masteries from API');
+        } else {
             var masteries = masteriesResult.data.data;
             var masteryPromises = [];
             logger.debug('Inserting masteries into DB');
@@ -75,15 +81,15 @@ module.exports = function(logger, api, db) {
             }
             await Promise.all(masteryPromises);
             logger.info('Done inserting masteries');
-        } else {
-            logger.error('Unable to get masteries from API');
         }
     };
 
     var getRunes = async function() {
         logger.debug('Getting runes from DB');
         var runesResult = await api.static.runes();
-        if (runesResult.data) {
+        if (runesResult.error) {
+            logger.error('Unable to get runes from API');
+        } else {
             runesResult = runesResult.data;
             var runePromises = [];
             logger.debug('Inserting runes into DB');
@@ -104,15 +110,15 @@ module.exports = function(logger, api, db) {
             }
             await Promise.all(runePromises);
             logger.info('Done inserting runes');
-        } else {
-            logger.error('Unable to get runes from API');
         }
     };
 
     var getSpells = async function() {
         logger.debug('Getting summoner spells from API');
         var spellsResult = await api.static.summonerSpells();
-        if (spellsResult.data) {
+        if (spellsResult.error) {
+            logger.error('Unable to get spells from API');
+        } else {
             var spells = spellsResult.data.data;
             var spellPromises = [];
             logger.debug('Inserting summoner spells into DB');
@@ -128,8 +134,6 @@ module.exports = function(logger, api, db) {
             }
             await Promise.all(spellPromises);
             logger.info('Done inserting spells');
-        } else {
-            logger.error('Unable to get spells from API');
         }
     };
 
@@ -142,7 +146,9 @@ module.exports = function(logger, api, db) {
         for (var i = 0; i < championKeys.length; i++) {
             var row = championKeys[i];
             var championResult = await api.static.skins(row.key);
-            if (championResult.data) {
+            if (championResult.error) {
+                logger.error('Unable to get champions from API');
+            } else {
                 var skins = championResult.data.data[row.key].skins;
                 for (var key in skins) {
                     var skin = {
@@ -167,6 +173,7 @@ module.exports = function(logger, api, db) {
         getChampions: getChampions,
         saveChampions: saveChampions,
         getItems: getItems,
+        saveItems: saveItems,
         getMasteries: getMasteries,
         getRunes: getRunes,
         getSpells: getSpells,

@@ -43,45 +43,37 @@
                 <button id="usernameButton" onclick="searchUser()">Search</button>
             </div>
             <div class='sortBox'>
-                <div class='sort' onclick='updateSort(<%= JSON.stringify(champions) %>, "name")'>Name</div>
-                <div class='sort' onclick='updateSort(<%= JSON.stringify(champions) %>, "championPoints")'>Points</div>
-                <div class='sort' onclick='updateSort(<%= JSON.stringify(champions) %>, "championPointsUntilNextLevel")'>Needed
+                <div class='sort' onclick='updateSort("name")'>Name</div>
+                <div class='sort' onclick='updateSort("championPoints")'>Points</div>
+                <div class='sort' onclick='updateSort("championPointsUntilNextLevel")'>Needed
                     Points</div>
-                <div class='sort' onclick='updateSort(<%= JSON.stringify(champions) %>, "progress")'>Progress</div>
+                <div class='sort' onclick='updateSort("progress")'>Progress</div>
             </div>
             <div class='filterBox'>
                 <div class='filter'>Chest
-                    <input type='radio' name='chestOption' onclick='updateChestFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='chestAll' value='all' checked>
+                    <input type='radio' name='chestOption' onclick='updateChestFilter(this)' id='chestAll' value='all'
+                        checked>
                     <label for='chestAll'>All</label>
-                    <input type='radio' name='chestOption' onclick='updateChestFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='chestGranted' value=true>
+                    <input type='radio' name='chestOption' onclick='updateChestFilter(this)' id='chestGranted' value=true>
                     <label for='chestGranted'>Granted</label>
-                    <input type='radio' name='chestOption' onclick='updateChestFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='chestNeeded' value=false>
+                    <input type='radio' name='chestOption' onclick='updateChestFilter(this)' id='chestNeeded' value=false>
                     <label for='chestNeeded'>Needed</label>
                 </div>
                 <div class='filter'>Tag
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='tagAll' value='all' checked>
+                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagAll' value='all'
+                        checked>
                     <label for='tagAll'>All</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='tagAssassin' value='Assassin'>
+                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagAssassin' value='Assassin'>
                     <label for='tagAssassin'>Assassin</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='tagFighter' value='Fighter'>
+                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagFighter' value='Fighter'>
                     <label for='tagFighter'>Fighter</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='tagMage' value='Mage'>
+                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagMage' value='Mage'>
                     <label for='tagMage'>Mage</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='tagMarksman' value='Marksman'>
+                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagMarksman' value='Marksman'>
                     <label for='tagMage'>Marksman</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='tagSupport' value='Support'>
+                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagSupport' value='Support'>
                     <label for='tagSupport'>Support</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(<%= JSON.stringify(champions) %>, this)'
-                        id='tagTank' value='Tank'>
+                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagTank' value='Tank'>
                     <label for='tagTank'>Tank</label>
                 </div>
             </div>
@@ -93,7 +85,8 @@
             <div class='championBox'>
                 <div class='championImage level<%= champion.championLevel %>'>
                     <a href='/champion?name=<%= champion.key %>&summoner=<%= summoner.name %>'>
-                        <img src='http://ddragon.leagueoflegends.com/cdn/<%= data.version %>/img/champion/<%= champion.key %>.png' alt='<%= champion.key %>'>
+                        <img src='http://ddragon.leagueoflegends.com/cdn/<%= data.version %>/img/champion/<%= champion.key %>.png'
+                            alt='<%= champion.key %>'>
                     </a>
                 </div>
                 <div class='championData'>
@@ -126,6 +119,10 @@
         </div>
     </div>
     <script src='../views/masteries.js'></script>
+    <script>
+        var data = <%- JSON.stringify(data) %>;
+        setVariables(data);
+    </script>
 </body>
 
 </html>
