@@ -42,8 +42,5 @@ module.exports = function(winston) {
             winston.silly(getStack() + ': ' + message);
         }
     };
-    var module = function(level, file, func, message) {
-        logger[level]('[' + file + '][' + func + ']: ' + message);
-    };
     return logger;
 };

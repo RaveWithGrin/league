@@ -1,7 +1,5 @@
 ﻿var riotRateLimiter = require('riot-ratelimiter');
 var limiter = new riotRateLimiter();
-var path = require('path');
-var fileName = path.basename(__filename);
 var request = require('request-promise');
 
 module.exports = function(logger) {
