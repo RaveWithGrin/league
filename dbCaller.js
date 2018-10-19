@@ -179,26 +179,34 @@ module.exports = function(logger) {
                         }
                     }
                     await Promise.all(banPromises);
-                    logger.info('Teams and bans inserted for match matchId=[' + gameId + '] into DB');
+                    logger.debug('Teams and bans inserted for match matchId=[' + gameId + '] into DB');
                     var participantPromises = [];
                     logger.debug('Inserting participants and stats and timelines for match matchId=[' + gameId + '] into DB');
                     for (var i = 0; i < match.participants.length; i++) {
                         var participant = match.participants[i];
+                        logger.silly('INSERT INTO participantStats SET ?');
+                        logger.silly(JSON.stringify(participant.stats));
                         var statsResult = await connection.query('INSERT INTO participantStats SET ?', participant.stats);
                         var statsId = statsResult.insertId;
-                        var timelineResult = await connection.query('INSERT INTO participantTimeline SET ?', participant.timeline);
-                        var timelineId = timelineResult.insertId;
+                        if (Object.keys(participant.timeline).length !== 0) {
+                            logger.silly('INSERT INTO participantTimeline SET ?');
+                            logger.silly(JSON.stringify(participant.timeline));
+                            var timelineResult = await connection.query('INSERT INTO participantTimeline SET ?', participant.timeline);
+                            var timelineId = timelineResult.insertId;
+                        }
                         participant.statsId = statsId;
                         participant.timelineId = timelineId;
                         delete participant.stats;
                         delete participant.timeline;
+                        logger.silly('INSERT INTO participants SET ?');
+                        logger.silly(JSON.stringify(participant));
                         participantPromises.push(await connection.query('INSERT INTO participants SET ?', participant));
                     }
                     await Promise.all(participantPromises);
-                    logger.info('Participants + stats + timeline inserted for match matchId=[' + gameId + '] into DB');
+                    logger.debug('Participants + stats + timeline inserted for match matchId=[' + gameId + '] into DB');
                     logger.debug('Updating match matchId=[' + gameId + '] in DB');
                     await connection.query('UPDATE matches SET ? WHERE id = ?', [match.match, gameId]);
-                    logger.info('Match matchId=[' + gameId + '] updated in DB');
+                    logger.debug('Match matchId=[' + gameId + '] updated in DB');
                     connection.commit();
                     return { data: 'Done' };
                 } catch (error) {

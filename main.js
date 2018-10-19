@@ -21,15 +21,19 @@ var userTest = require('./singleUserTest')(logger, userData);
 var webserver = require('./webserver')(logger, staticData, userData, matchData, db);
 
 argv.command('server [port]', 'Starts the webserver', {}, function(argv){
-    logger.info('Starting the webserver on port ' + (argv.port || 'default'));
-}).command('static', 'Gets static data', {}, function(argv){
-    logger.info('Getting static data');
-}).command('user <username>', 'Gets summoner data', {}, function(argv){
-    logger.info('Getting summoner data for ' + argv.username);
-}).demandCommand().command('matchlist [limit]', 'Gets data for matches in the DB', {}, function(argv){
-    logger.info('Getting data for ' + (argv.limit || 1) + ' matches at a time');
-}).command('newmatches [limit]', 'Gets new matches from new summoners', {}, function(argv){
-    logger.info('Getting matches for' + (argv.limit || 1) + 'summoners at a time');
+    webserver.start();
+}).command('static', 'Gets static data', {}, async function(argv){
+    await staticData.getAll();
+    process.exit(0);
+}).command('user <username>', 'Gets summoner data', {}, async function(argv){
+    await userTest.pipeline(argv.username);
+    process.exit(0);
+}).demandCommand().command('matchlist [limit]', 'Gets data for matches in the DB', {}, async function(argv){
+    await matchData.processMatchList(argv.limit);
+    process.exit(0);
+}).command('newmatches [limit]', 'Gets new matches from new summoners', {}, async function(argv){
+    await matchData.fetchNewMatches(argv.limit);
+    process.exit(0);
 }).help().argv;
 
 //webserver.start();
