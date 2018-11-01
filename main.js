@@ -30,10 +30,8 @@ argv.command('server [port]', 'Starts the webserver', {}, function(argv){
     process.exit(0);
 }).demandCommand().command('matchlist [limit]', 'Gets data for matches in the DB', {}, async function(argv){
     await matchData.processMatchList(argv.limit);
-    process.exit(0);
 }).command('newmatches [limit]', 'Gets new matches from new summoners', {}, async function(argv){
     await matchData.fetchNewMatches(argv.limit);
-    process.exit(0);
 }).help().argv;
 
 //webserver.start();
