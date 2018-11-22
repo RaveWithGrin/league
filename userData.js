@@ -63,7 +63,7 @@ module.exports = function(logger, api, db) {
                 return { data: leaguesArray };
             }
         },
-        save: async function(leaguesArray) {
+        save: async function(summoner, leaguesArray) {
             var leaguesPromises = [];
             logger.debug('Inserting league positions for summonerName=[' + summoner.name + '] into DB');
             for (var i = 0; i < leaguesArray; i++) {
