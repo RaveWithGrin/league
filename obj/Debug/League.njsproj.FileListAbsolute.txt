@@ -1,3 +1,0 @@
-E:\Programming\League\obj\Debug\League.njsprojAssemblyReference.cache
-E:\Programming\League\obj\Debug\League.njsproj.CoreCompileInputs.cache
-E:\Programming\League\bin\Microsoft.NodejsTools.WebRole.dll

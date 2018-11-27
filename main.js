@@ -1,17 +1,6 @@
-var winston = require('winston');
-var Promise = require('bluebird');
+var argv = require('yargs');
 
-var myFormat = winston.format.printf(function(info) {
-    return info.timestamp + ' ' + info.level.toUpperCase() + ' ' + info.message;
-});
-
-var winstonLogger = winston.createLogger({
-    format: winston.format.combine(winston.format.timestamp(), myFormat),
-    transports: [new winston.transports.Console()],
-    level: 'info'
-});
-
-var logger = require('./logger')(winstonLogger);
+var logger = require('./logger')('debug');
 var api = require('./apiCaller')(logger);
 var db = require('./dbCaller')(logger);
 
@@ -19,29 +8,41 @@ var staticData = require('./staticData')(logger, api, db);
 var userData = require('./userData')(logger, api, db);
 var matchData = require('./matchData')(logger, api, db);
 var userTest = require('./singleUserTest')(logger, userData);
-
 var webserver = require('./webserver')(logger, staticData, userData, matchData, db);
-webserver.start();
 
-var getAllStaticData = async function() {
-    var staticDataPromises = [];
-    var champions = await staticData.getChampions();
-    staticDataPromises.push(staticData.saveChampions(champions.data));
-    var items = await staticData.getItems();
-    staticDataPromises.push(staticData.saveItems(items.data));
-    staticDataPromises.push(staticData.getRunes());
-    staticDataPromises.push(staticData.getSpells());
-    staticDataPromises.push(staticData.getSkins());
-    await Promise.all(staticDataPromises);
-    logger.info('Done getting static data');
+/*
+argv
+    .command('server [port]', 'Starts the webserver', {}, function(argv) {
+        webserver.start();
+    })
+    .command('static', 'Gets static data', {}, async function(argv) {
+        await staticData.getAll();
+        process.exit(0);
+    })
+    .command('user <username>', 'Gets summoner data', {}, async function(argv) {
+        await userTest.pipeline(argv.username);
+        process.exit(0);
+    })
+    .demandCommand()
+    .command('matchlist [limit]', 'Gets data for matches in the DB', {}, async function(argv) {
+        await matchData.processMatchList(argv.limit);
+    })
+    .command('newmatches [limit]', 'Gets new matches from new summoners', {}, async function(argv) {
+        await matchData.fetchNewMatches(argv.limit);
+    })
+    .help().argv;
+*/
+
+var main = async function() {
+    //await staticData.getAll();
+    //await userTest.pipeline('Rave With Grin');
+    //await matchData.processMatchList(10);
+    webserver.start();
 };
 
-//getAllStaticData();
-
-//userTest.pipeline('Rave With Grin');
-
+main();
+//webserver.start();
 //matchData.processMatchList(25);
-
 //matchData.fetchNewMatches(10000);
 
 process.on('unhandledRejection', function(error) {

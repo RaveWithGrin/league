@@ -169,6 +169,20 @@ module.exports = function(logger, api, db) {
         return await api.ddragonVersion();
     };
 
+    var getAll = async function(){
+        logger.info('Getting all static data');
+        var staticDataPromises = [];
+        var champions = await getChampions();
+        staticDataPromises.push(saveChampions(champions.data));
+        var items = await getItems();
+        staticDataPromises.push(saveItems(items.data));
+        staticDataPromises.push(getRunes());
+        staticDataPromises.push(getSpells());
+        staticDataPromises.push(getSkins());
+        await Promise.all(staticDataPromises);
+        logger.info('Done getting static data');
+    };
+
     return {
         getChampions: getChampions,
         saveChampions: saveChampions,
@@ -178,6 +192,7 @@ module.exports = function(logger, api, db) {
         getRunes: getRunes,
         getSpells: getSpells,
         getSkins: getSkins,
-        getVersion: getVersion
+        getVersion: getVersion,
+        getAll: getAll
     };
 };

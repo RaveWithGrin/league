@@ -2,6 +2,46 @@ a {
     text-decoration: none !important;
 }
 
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+.tab button:hover {
+    background-color: #ddd;
+}
+
+.tab button.active {
+    background-color: #ccc;
+}
+
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+    animation: fadeEffect 1s;
+}
+
+@keyframes fadeEffect {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .masteriesBox {
     display: flex;
     flex-wrap: wrap;
@@ -9,8 +49,16 @@ a {
     align-content: space-between;
 }
 
+.masteriesSubBox {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: space-between;
+    border-bottom: 5px solid black;
+}
+
 .championBox {
-    width: 120px;
+    width: 60px;
     margin: 5px;
     color: black;
 }
@@ -20,38 +68,38 @@ a {
 }
 
 .level1 {
-    outline: 9px solid black;
-    outline-offset: -9px;
+    outline: 4px solid black;
+    outline-offset: -4px;
 }
 
 .level2 {
-    outline: 9px solid black;
-    outline-offset: -9px;
+    outline: 4px solid black;
+    outline-offset: -4px;
 }
 
 .level3 {
-    outline: 9px solid black;
-    outline-offset: -9px;
+    outline: 4px solid black;
+    outline-offset: -4px;
 }
 
 .level4 {
-    outline: 9px solid rgba(149, 120, 51, 1);
-    outline-offset: -9px;
+    outline: 4px solid rgba(149, 120, 51, 1);
+    outline-offset: -4px;
 }
 
 .level5 {
-    outline: 9px solid rgba(125, 31, 36, 1);
-    outline-offset: -9px;
+    outline: 4px solid rgba(125, 31, 36, 1);
+    outline-offset: -4px;
 }
 
 .level6 {
-    outline: 9px solid rgba(129, 52, 121, 1);
-    outline-offset: -9px;
+    outline: 4px solid rgba(129, 52, 121, 1);
+    outline-offset: -4px;
 }
 
 .level7 {
-    outline: 9px solid rgba(51, 181, 184, 1);
-    outline-offset: -9px;
+    outline: 4px solid rgba(51, 181, 184, 1);
+    outline-offset: -4px;
 }
 
 .progressBox {
@@ -82,6 +130,10 @@ a {
 .championLevel {
     width: 10px;
     text-align: center;
+}
+
+.championImage {
+    width: 60px;
 }
 
 .sortBox {

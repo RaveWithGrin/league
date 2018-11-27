@@ -10,14 +10,6 @@
     <link rel='stylesheet' href='../views/masteries.css' type='text/css' />
 </head>
 
-<% if (data !== null){ %>
-<% var champions = data.champions; %>
-<% var summoner = data.summoner; %>
-<% } else { %>
-<% var champions = ''; %>
-<% var summoner = ''; %>
-<% } %>
-
 <body>
     <div class="container">
         <div class="masthead">
@@ -42,7 +34,7 @@
                 <input id="usernameBox" placeholder="Username">
                 <button id="usernameButton" onclick="searchUser()">Search</button>
             </div>
-            <div class='sortBox'>
+            <!--div class='sortBox'>
                 <div class='sort' onclick='updateSort("name")'>Name</div>
                 <div class='sort' onclick='updateSort("championPoints")'>Points</div>
                 <div class='sort' onclick='updateSort("championPointsUntilNextLevel")'>Needed
@@ -76,53 +68,38 @@
                     <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagTank' value='Tank'>
                     <label for='tagTank'>Tank</label>
                 </div>
-            </div>
+            </div-->
         </div>
-        <div class='masteriesBox' id='masteriesBox'>
-            <% if (champions) { %>
-            <% for (var i=0 ; i < champions.length; i++){ %>
-            <% var champion = champions[i]; %>
-            <div class='championBox'>
-                <div class='championImage level<%= champion.championLevel %>'>
-                    <a href='/champion?name=<%= champion.key %>&summoner=<%= summoner.name %>'>
-                        <img src='http://ddragon.leagueoflegends.com/cdn/<%= data.version %>/img/champion/<%= champion.key %>.png'
-                            alt='<%= champion.key %>'>
-                    </a>
-                </div>
-                <div class='championData'>
-                    <div class='championName'>
-                        <%= champion.name %>
-                    </div>
-                    <div class='chestBox'>
-                        <img style='width: 50px' src='../static/chest<%= champion.chestGranted %>.jpg' alt='Chest earned: <%= champion.chestGranted %>'>
-                    </div>
-                </div>
-                <% var progress = (champion.championLevel < 5) ? (100 * (champion.championPoints / (champion.championPoints + champion.championPointsUntilNextLevel))) : (champion.championLevel === 5) ? (100 * (champion.tokensEarned / 2)) : (champion.championLevel === 6) ? (100 * (champion.tokensEarned / 3)) : 100; %>
-                <% var points = (champion.championLevel < 5) ? (champion.championPoints + '/' + (champion.championPoints + champion.championPointsUntilNextLevel)) : (champion.championLevel === 5) ? (champion.tokensEarned + '/2 tokens - ' + champion.championPoints) : (champion.championLevel === 6) ? (champion.tokensEarned + '/3 tokens - ' + champion.championPoints) : champion.championPoints;  %>
-                <div class='progressBox'>
-                    <div class='championLevel'>
-                        <%= champion.championLevel %>
-                    </div>
-                    <div class='progressBar'>
-                        <div class='progress' style='width: <%= progress %>;'></div>
-                    </div>
-                    <div class='championLevel'>
-                        <%= champion.championLevel + 1 %>
-                    </div>
-                </div>
-                <div class='points'>
-                    <%= points %>
-                </div>
-            </div>
-            <% } %>
-            <% } %>
+        <div class='tab'>
+            <button class='tablinks' onclick='switchTab(event, "allMasteries")'>All</button>
+            <button class='tablinks' onclick='switchTab(event, "roleMasteries")'>Role</button>
+            <button class='tablinks' onclick='switchTab(event, "chestMasteries")'>Chest Earned</button>
+            <button class='tablinks' onclick='switchTab(event, "levelMasteries")'>Mastery Level</button>
+        </div>
+        <div class='masteriesBox tabcontent' id='allMasteries'></div>
+        <div class='masteriesBox tabcontent' id='roleMasteries' style="display: none">
+            <div class='masteriesSubBox' id='AssassinSubBox'>Assassins</div>
+            <div class='masteriesSubBox' id='FighterSubBox'>Fighters</div>
+            <div class='masteriesSubBox' id='MageSubBox'>Mages</div>
+            <div class='masteriesSubBox' id='MarksmanSubBox'>Marksmen</div>
+            <div class='masteriesSubBox' id='SupportSubBox'>Supports</div>
+            <div class='masteriesSubBox' id='TankSubBox'>Tanks</div>
+        </div>
+        <div class='masteriesBox tabcontent' id='chestMasteries' style="display: none">
+            <div class='masteriesSubBox' id='chesttrueSubBox'>Chest Earned</div>
+            <div class='masteriesSubBox' id='chestfalseSubBox'>Chest Needed</div>
+        </div>
+        <div class='masteriesBox tabcontent' id='levelMasteries' style="display: none">
+            <div class='masteriesSubBox' id='level1SubBox'>Level 1</div>
+            <div class='masteriesSubBox' id='level2SubBox'>Level 2</div>
+            <div class='masteriesSubBox' id='level3SubBox'>Level 3</div>
+            <div class='masteriesSubBox' id='level4rSubBox'>Level 4</div>
+            <div class='masteriesSubBox' id='level5SubBox'>Level 5</div>
+            <div class='masteriesSubBox' id='level6SubBox'>Level 6</div>
+            <div class='masteriesSubBox' id='level7SubBox'>Level 7</div>
         </div>
     </div>
     <script src='../views/masteries.js'></script>
-    <script>
-        var data = <%- JSON.stringify(data) %>;
-        setVariables(data);
-    </script>
 </body>
 
 </html>
