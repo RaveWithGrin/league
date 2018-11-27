@@ -19,3 +19,18 @@
     align-content: space-between;
     width: 90px;
 }
+
+.overallStats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: space-between;
+}
+
+.win {
+    background-color: rgba(0, 255, 0, 0.5);
+}
+
+.loss {
+    background-color: rgba(255, 0, 0, 0.5);
+}

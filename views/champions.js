@@ -47,10 +47,22 @@ var getURLParamter = function(param) {
 
 var displayGames = function() {
     $('#gamesBox').empty();
+    var totalKills = 0;
+    var totalDeaths = 0;
+    var totalAssists = 0;
+    var largestMultikill = 0;
+    var totalWins = 0;
     for (var i = 0; i < stats.length; i++) {
         var game = stats[i];
+        totalKills += game.kills;
+        totalDeaths += game.deaths;
+        totalAssists += game.assists;
+        totalWins += game.win;
+        if (game.largestMultikill > largestMultikill) {
+            largestMultikill = game.largestMultikill;
+        }
         console.log(game);
-        var html = '<div class="game">';
+        var html = '<div class="game' + (game.win === 1 ? ' win' : ' loss') + '">';
         html += '<div class="level">Level ' + game.champLevel + '</div>';
         html += '<div class="kda">';
         var kda = ((game.kills + game.assists) / (game.deaths > 0 ? game.deaths : 1)).toFixed(2);
@@ -83,4 +95,15 @@ var displayGames = function() {
         html += '</div>';
         $('#gamesBox').append(html);
     }
+    var html = '<div class="overallStats">';
+    html += '<div class="kda">';
+    var kda = ((totalKills + totalAssists) / (totalDeaths > 0 ? totalDeaths : 1)).toFixed(2);
+    html += totalKills + ' / ' + totalDeaths + ' / ' + totalAssists + ' - ' + kda;
+    html += '</div>';
+    html += '<div class="winPercentage">';
+    var winPercentage = ((totalWins / stats.length) * 100).toFixed(2);
+    html += totalWins + ' wins /' + stats.length + ' games - ' + winPercentage + '% winrate';
+    html += '</div>';
+    html += '</div>';
+    $('#gamesBox').prepend(html);
 };
