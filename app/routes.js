@@ -65,54 +65,7 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
     });
 
     app.get('/championmasteries', async function(req, res) {
-        if (req.query.user) {
-            var currentVersion = await staticData.getVersion();
-            // If we can't get the summoner from the API, try and get it from the DB
-            var summonerResult = await userData.summoner.get(req.query.user);
-            if (summonerResult.error) {
-                res.render('masteries.ejs', {
-                    data: null
-                });
-            } else {
-                var summoner = summonerResult.data;
-                userData.summoner.save(summoner);
-                // If we can't get champions from the API, try and get them from the DB
-                var championResult = await staticData.getChampions();
-                if (championResult.error) {
-                    res.render('masteries.ejs');
-                } else {
-                    var champions = championResult.data;
-                    // If we can't get summoner's champion masteries from API, try and get them from the DB
-                    var masteriesResult = await userData.championMasteries.get(summoner);
-                    if (masteriesResult.error) {
-                        res.render('masteries.ejs');
-                    } else {
-                        var masteries = masteriesResult.data;
-                        userData.championMasteries.save(masteries, summoner.name);
-                        for (var i = 0; i < champions.length; i++) {
-                            var champion = champions[i];
-                            for (var j = 0; j < masteries.length; j++) {
-                                var mastery = masteries[j];
-                                if (parseInt(champion.id) === mastery.championId) {
-                                    for (var key in mastery) {
-                                        champion[key] = mastery[key];
-                                    }
-                                }
-                            }
-                        }
-                        res.render('masteries.ejs', {
-                            data: {
-                                summoner: summoner,
-                                champions: champions,
-                                version: currentVersion
-                            }
-                        });
-                    }
-                }
-            }
-        } else {
-            res.render('masteries.ejs', { data: null });
-        }
+        res.render('masteries.ejs', { data: null });
     });
 
     app.get('/matchlist', function(req, res) {

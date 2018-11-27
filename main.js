@@ -1,18 +1,6 @@
-var winston = require('winston');
 var argv = require('yargs');
 
-var winstonLogger = winston.createLogger({
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.printf(function(info) {
-            return info.timestamp + ' ' + info.level.toUpperCase() + ' ' + info.message;
-        })
-    ),
-    transports: [new winston.transports.Console()],
-    level: 'info'
-});
-
-var logger = require('./logger')(winstonLogger);
+var logger = require('./logger')('debug');
 var api = require('./apiCaller')(logger);
 var db = require('./dbCaller')(logger);
 
@@ -46,9 +34,10 @@ argv
 */
 
 var main = async function() {
-    await staticData.getAll();
-    await userTest.pipeline('Rave With Grin');
-    await matchData.processMatchList(10);
+    //await staticData.getAll();
+    //await userTest.pipeline('Rave With Grin');
+    //await matchData.processMatchList(10);
+    webserver.start();
 };
 
 main();
