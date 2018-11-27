@@ -1,5 +1,8 @@
 var currentVersion;
 var champions = [];
+var roles = {};
+var chests = {};
+var levels = {};
 var currentSort = 'name';
 var currentChestFilter = 'all';
 var currentTagFilter = 'all';
@@ -11,6 +14,7 @@ $(function() {
     var username = getURLParamter('user');
     if (username) {
         $('#usernameBox').val(username);
+        searchUser();
     }
     // Get the current ddragon version
     $.ajax({
@@ -21,14 +25,6 @@ $(function() {
         }
     });
 });
-
-var setVariables = function(data) {
-    if (data) {
-        currentVersion = data.version;
-        champions = data.champions;
-        summoner = data.summoner;
-    }
-};
 
 // Return paramter value from URL if it exists, true if no value, false if parameter is missing
 var getURLParamter = function(param) {
@@ -51,7 +47,7 @@ var searchUser = function() {
     // Add username to URL for refreshes
     window.history.replaceState(null, null, '?user=' + username);
     // Empty the current masteries
-    $('#masteriesBox').empty();
+    $('#allMasteries').empty();
     // #TODO add loading graphic
     // Get masteries from server
     $.ajax({
@@ -81,7 +77,93 @@ var parseMasteries = function(result) {
         var summoner = result.data.summoner;
         champions = result.data.champions;
         setProgress();
-        updateList();
+        createSubGroups();
+        fillPage();
+    }
+};
+
+var createSubGroups = function() {
+    for (var i = 0; i < champions.length; i++) {
+        var champion = champions[i];
+        if (champion.tag1) {
+            if (roles[champion.tag1]) {
+                roles[champion.tag1].push(champion);
+            } else {
+                roles[champion.tag1] = [champion];
+            }
+        }
+        if (champion.tag2) {
+            if (roles[champion.tag2]) {
+                roles[champion.tag2].push(champion);
+            } else {
+                roles[champion.tag2] = [champion];
+            }
+        }
+        if (chests[champion.chestGranted]) {
+            chests[champion.chestGranted].push(champion);
+        } else {
+            chests[champion.chestGranted] = [champion];
+        }
+        if (levels[champion.championLevel]) {
+            levels[champion.championLevel].push(champion);
+        } else {
+            levels[champion.championLevel] = [champion];
+        }
+    }
+};
+
+var fillPage = function() {
+    $('#allMasteries').empty();
+    $('#roleMasteries div').empty();
+    $('#chestMasteries div').empty();
+    $('#levelMasteries div').empty();
+    for (var i = 0; i < champions.length; i++) {
+        var champion = champions[i];
+        var points =
+            champion.championLevel < 5
+                ? champion.championPoints + '/' + (champion.championPoints + champion.championPointsUntilNextLevel)
+                : champion.championLevel === 5
+                ? champion.tokensEarned + '/2 tokens - ' + champion.championPoints
+                : champion.championLevel === 6
+                ? champion.tokensEarned + '/3 tokens - ' + champion.championPoints
+                : champion.championPoints;
+        var html =
+            '<div class="championBox"><div class="championImage level' +
+            champion.championLevel +
+            '"><a href="/champion?name=' +
+            champion.key +
+            '&summoner=' +
+            getURLParamter('user') +
+            '"><img class="championImage" src="http://ddragon.leagueoflegends.com/cdn/' +
+            currentVersion +
+            '/img/champion/' +
+            champion.key +
+            '.png" alt="' +
+            champion.key +
+            '"></a></div><div class="championData"><div class="championName">' +
+            champion.name +
+            '</div><div class="chestBox"><img style="width: 25px" src="../static/chest' +
+            champion.chestGranted +
+            '.jpg" alt="Chest earned: ' +
+            champion.chestGranted +
+            '"> </div></div><div class="progressBox"><div class="championLevel">' +
+            champion.championLevel +
+            '</div><div class="progressBar"><div class="progress" style="width: ' +
+            champion.progress +
+            '%;"></div></div><div class="championLevel">' +
+            (champion.championLevel + 1) +
+            '</div></div><div class="points">' +
+            points +
+            '</div></div>';
+        $('#allMasteries').append(html);
+        if (champion.tag1) {
+            $('#' + champion.tag1 + 'SubBox').append(html);
+        }
+        if (champion.tag2) {
+            $('#' + champion.tag2 + 'SubBox').append(html);
+        }
+        $('#chest' + champion.chestGranted + 'SubBox').append(html);
+        $('#level' + champion.championLevel + 'SubBox').append(html);
     }
 };
 
@@ -90,7 +172,7 @@ var displayMasteries = function(champArray) {
     // If we pass in a list of champions, use that, else use the global / original list
     var champs = champArray ? champArray : champions;
     // Clear the list of champions
-    $('#masteriesBox').empty();
+    $('#allMasteries').empty();
     for (var i = 0; i < champs.length; i++) {
         var champion = champs[i];
         var html = '<div class="championBox">';
@@ -111,10 +193,10 @@ var displayMasteries = function(champArray) {
             champion.championLevel < 5
                 ? champion.championPoints + '/' + (champion.championPoints + champion.championPointsUntilNextLevel)
                 : champion.championLevel === 5
-                    ? champion.tokensEarned + '/2 tokens - ' + champion.championPoints
-                    : champion.championLevel === 6
-                        ? champion.tokensEarned + '/3 tokens - ' + champion.championPoints
-                        : champion.championPoints;
+                ? champion.tokensEarned + '/2 tokens - ' + champion.championPoints
+                : champion.championLevel === 6
+                ? champion.tokensEarned + '/3 tokens - ' + champion.championPoints
+                : champion.championPoints;
         html += '<div class="progressBox">';
         html += '<div class="championLevel">';
         html += champion.championLevel;
@@ -131,7 +213,7 @@ var displayMasteries = function(champArray) {
         html += points;
         html += '</div>';
         html += '</div>';
-        $('#masteriesBox').append(html);
+        $('#allMasteries').append(html);
     }
 };
 
@@ -148,12 +230,12 @@ var championSort = function(property) {
             a[property] < b[property]
                 ? -1
                 : a[property] > b[property]
-                    ? 1
-                    : a['championPoints'] > b['championPoints']
-                        ? -1
-                        : a['championPoints'] < b['championPoints']
-                            ? 1
-                            : 0;
+                ? 1
+                : a['championPoints'] > b['championPoints']
+                ? -1
+                : a['championPoints'] < b['championPoints']
+                ? 1
+                : 0;
         return result * sortOrder;
     };
 };
@@ -187,7 +269,6 @@ var updateChestFilter = function(chestButton) {
 };
 
 var updateTagFilter = function(tagButton) {
-    ``;
     // Only attempt to do anything if we actually have retrieved masteries
     if (champions.length > 0) {
         setProgress();
@@ -208,10 +289,10 @@ var setProgress = function() {
             champion.championLevel < 5
                 ? 100 * (champion.championPoints / (champion.championPoints + champion.championPointsUntilNextLevel))
                 : champion.championLevel === 5
-                    ? 100 * (champion.tokensEarned / 2)
-                    : champion.championLevel === 6
-                        ? 100 * (champion.tokensEarned / 3)
-                        : 100;
+                ? 100 * (champion.tokensEarned / 2)
+                : champion.championLevel === 6
+                ? 100 * (champion.tokensEarned / 3)
+                : 100;
         champion.progress = progress;
     }
 };
@@ -247,4 +328,17 @@ var updateList = function() {
     }
     filteredChampions.sort(championSort(currentSort));
     displayMasteries(filteredChampions);
+};
+
+var switchTab = function(evt, tabName) {
+    var tabs = document.getElementsByClassName('tabcontent');
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].style.display = 'none';
+    }
+    var tabLinks = document.getElementsByClassName('tablinks');
+    for (var i = 0; i < tabLinks.length; i++) {
+        tabLinks[i].className = tabLinks[i].className.replace(' active', '');
+    }
+    document.getElementById(tabName).style.display = 'flex';
+    evt.currentTarget.className += ' active';
 };
