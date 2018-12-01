@@ -105,9 +105,7 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
                             for (var j = 0; j < masteries.length; j++) {
                                 var mastery = masteries[j];
                                 if (parseInt(champion.id) === mastery.championId) {
-                                    for (var key in mastery) {
-                                        champion[key] = mastery[key];
-                                    }
+                                    Object.assign(champion, mastery);
                                 }
                             }
                         }
@@ -143,7 +141,7 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
     app.ws('/summoner', function(ws, req) {
         ws.on('message', async function(msg) {
             var message = JSON.parse(msg);
-            logger.debug(message);
+            logger.info(JSON.stringify(message));
             ws.send(msg);
             var messageType = message.type;
             switch (messageType) {
@@ -159,42 +157,64 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
             console.log('WS was closed');
         });
     });
-};
 
-var getUserMasteries = async function(ws, summonerName) {
-    var summonerResult = await userData.summoner.get(summonerName);
-    if (summonerResult.error) {
-        ws.send('Error getting summoner from API');
-        ws.send(summonerResult.error);
-    } else {
-        var summoner = summonerResult.data;
-        userData.summoner.save(summoner);
-        var championResult = await staticData.getChampions();
-        if (championResult.error) {
-            ws.send('Error getting champions from API');
-            ws.send(championResult.error);
+    var getUserMasteries = async function(ws, summonerName) {
+        var summonerResult = await userData.summoner.get(summonerName);
+        if (summonerResult.error) {
+            ws.send(
+                JSON.stringify({
+                    result: 'error',
+                    type: 'championMasteries',
+                    message: 'Error getting summoner from API',
+                    data: summonerResult.error
+                })
+            );
         } else {
-            var champions = championResult.data;
-            var masteriesResult = await userData.championMasteries.get(summoner);
-            if (masteriesResult.error) {
-                ws.send('Error getting champion masteries from API');
-                ws.send(masteriesResult.error);
+            var summoner = summonerResult.data;
+            userData.summoner.save(summoner);
+            var championResult = await staticData.getChampions();
+            if (championResult.error) {
+                ws.send(
+                    JSON.stringify({
+                        result: 'error',
+                        type: 'championMasteries',
+                        message: 'Error getting champions from API',
+                        data: championResult.error
+                    })
+                );
             } else {
-                var masteries = masteriesResult.data;
-                for (var i = 0; i < champions.length; i++) {
-                    var champion = champions[i];
-                    for (var j = 0; j < masteries.length; j++) {
-                        var mastery = masteries[j];
-                        if (parseInt(champion.id) === mastery.championId) {
-                            for (var key in mastery) {
-                                champion[key] = mastery[key];
+                var champions = championResult.data;
+                var masteriesResult = await userData.championMasteries.get(summoner);
+                if (masteriesResult.error) {
+                    ws.send(
+                        JSON.stringify({
+                            result: 'error',
+                            type: 'championMasteries',
+                            message: 'Error getting champion masteries from API',
+                            data: masteriesResult.error
+                        })
+                    );
+                } else {
+                    var masteries = masteriesResult.data;
+                    userData.championMasteries.save(masteries, summoner.name);
+                    for (var i = 0; i < champions.length; i++) {
+                        var champion = champions[i];
+                        for (var j = 0; j < masteries.length; j++) {
+                            var mastery = masteries[j];
+                            if (parseInt(champion.id) === mastery.championId) {
+                                Object.assign(champion, mastery);
                             }
                         }
                     }
+                    ws.send(
+                        JSON.stringify({
+                            result: 'success',
+                            type: 'championMasteries',
+                            data: champions
+                        })
+                    );
                 }
-                ws.send(champions);
-                userData.championMasteries.save(masteries, summoner.name);
             }
         }
-    }
+    };
 };
