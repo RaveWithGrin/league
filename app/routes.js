@@ -144,9 +144,57 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
         ws.on('message', async function(msg) {
             var message = JSON.parse(msg);
             logger.debug(message);
+            ws.send(msg);
+            var messageType = message.type;
+            switch (messageType) {
+                case 'championMasteries':
+                    var summonerName = message.summonerName;
+                    getUserMasteries(ws, summonerName);
+                    break;
+                default:
+                    ws.send('Unknown message type [' + message.type + ']');
+            }
         });
         ws.on('close', function() {
             console.log('WS was closed');
         });
     });
+};
+
+var getUserMasteries = async function(ws, summonerName) {
+    var summonerResult = await userData.summoner.get(summonerName);
+    if (summonerResult.error) {
+        ws.send('Error getting summoner from API');
+        ws.send(summonerResult.error);
+    } else {
+        var summoner = summonerResult.data;
+        userData.summoner.save(summoner);
+        var championResult = await staticData.getChampions();
+        if (championResult.error) {
+            ws.send('Error getting champions from API');
+            ws.send(championResult.error);
+        } else {
+            var champions = championResult.data;
+            var masteriesResult = await userData.championMasteries.get(summoner);
+            if (masteriesResult.error) {
+                ws.send('Error getting champion masteries from API');
+                ws.send(masteriesResult.error);
+            } else {
+                var masteries = masteriesResult.data;
+                for (var i = 0; i < champions.length; i++) {
+                    var champion = champions[i];
+                    for (var j = 0; j < masteries.length; j++) {
+                        var mastery = masteries[j];
+                        if (parseInt(champion.id) === mastery.championId) {
+                            for (var key in mastery) {
+                                champion[key] = mastery[key];
+                            }
+                        }
+                    }
+                }
+                ws.send(champions);
+                userData.championMasteries.save(masteries, summoner.name);
+            }
+        }
+    }
 };
