@@ -1,12 +1,6 @@
 var currentVersion;
 var champions = [];
-var roles = {};
-var chests = {};
-var levels = {};
-var currentSort = 'name';
-var currentChestFilter = 'all';
-var currentTagFilter = 'all';
-var summoner;
+var lastSearch = 'name';
 
 var websocket = new WebSocket('ws://localhost:8082/summoner');
 
@@ -15,7 +9,6 @@ websocket.onmessage = function(event) {
     if (message.result === 'success' && message.type === 'championMasteries') {
         champions = message.data;
         setProgress();
-        createSubGroups();
         fillPage();
     }
 };
@@ -60,6 +53,9 @@ var searchUser = function() {
     window.history.replaceState(null, null, '?user=' + username);
     // Empty the current masteries
     $('#allMasteries').empty();
+    $('#roleMasteries div').empty();
+    $('#chestMasteries div').empty();
+    $('#levelMasteries div').empty();
     if (websocket.readyState === websocket.OPEN) {
         websocket.send(
             JSON.stringify({
@@ -87,51 +83,21 @@ $('#usernameBox').on('keyup', function(event) {
     }
 });
 
-var createSubGroups = function() {
-    for (var i = 0; i < champions.length; i++) {
-        var champion = champions[i];
-        if (champion.tag1) {
-            if (roles[champion.tag1]) {
-                roles[champion.tag1].push(champion);
-            } else {
-                roles[champion.tag1] = [champion];
-            }
-        }
-        if (champion.tag2) {
-            if (roles[champion.tag2]) {
-                roles[champion.tag2].push(champion);
-            } else {
-                roles[champion.tag2] = [champion];
-            }
-        }
-        if (chests[champion.chestGranted]) {
-            chests[champion.chestGranted].push(champion);
-        } else {
-            chests[champion.chestGranted] = [champion];
-        }
-        if (levels[champion.championLevel]) {
-            levels[champion.championLevel].push(champion);
-        } else {
-            levels[champion.championLevel] = [champion];
-        }
-    }
-};
-
 var fillPage = function() {
+    if (lastSearch[0] === '-') {
+        var secondaryKey = lastSearch.substring(1, lastSearch.length) === 'name' ? 'championPoints' : 'name';
+        champions = sortByKey(champions, lastSearch.substring(1, lastSearch.length), secondaryKey);
+        champions = champions.reverse();
+    } else {
+        var secondaryKey = lastSearch === 'name' ? 'championPoints' : 'name';
+        champions = sortByKey(champions, lastSearch, secondaryKey);
+    }
     $('#allMasteries').empty();
     $('#roleMasteries div').empty();
     $('#chestMasteries div').empty();
     $('#levelMasteries div').empty();
     for (var i = 0; i < champions.length; i++) {
         var champion = champions[i];
-        var points =
-            champion.championLevel < 5
-                ? champion.championPoints + '/' + (champion.championPoints + champion.championPointsUntilNextLevel)
-                : champion.championLevel === 5
-                ? champion.tokensEarned + '/2 tokens - ' + champion.championPoints
-                : champion.championLevel === 6
-                ? champion.tokensEarned + '/3 tokens - ' + champion.championPoints
-                : champion.championPoints;
         var html =
             '<div class="championBox"><div class="championImage level' +
             champion.championLevel +
@@ -158,7 +124,8 @@ var fillPage = function() {
             '%;"></div></div><div class="championLevel">' +
             (champion.championLevel + 1) +
             '</div></div><div class="points">' +
-            points +
+            champion.championPoints +
+            'pts' +
             '</div></div>';
         $('#allMasteries').append(html);
         if (champion.tag1) {
@@ -200,15 +167,43 @@ var setProgress = function() {
     }
 };
 
-var switchTab = function(evt, tabName) {
-    var tabs = document.getElementsByClassName('tabcontent');
+var switchMasteryTab = function(evt, tabName) {
+    var tabs = document.getElementsByClassName('masteryTabContent');
     for (var i = 0; i < tabs.length; i++) {
         tabs[i].style.display = 'none';
     }
-    var tabLinks = document.getElementsByClassName('tablinks');
-    for (var i = 0; i < tabLinks.length; i++) {
-        tabLinks[i].className = tabLinks[i].className.replace(' active', '');
+    var masteryTabLinks = document.getElementsByClassName('masteryTabLinks');
+    for (var i = 0; i < masteryTabLinks.length; i++) {
+        masteryTabLinks[i].className = masteryTabLinks[i].className.replace(' active', '');
     }
     document.getElementById(tabName).style.display = 'flex';
     evt.currentTarget.className += ' active';
+};
+
+var switchSearch = function(evt, search) {
+    var searchTabLinks = document.getElementsByClassName('searchTabLinks');
+    for (var i = 0; i < searchTabLinks.length; i++) {
+        searchTabLinks[i].className = searchTabLinks[i].className.replace('active', '');
+    }
+    evt.currentTarget.className += ' active';
+    if (search === lastSearch) {
+        lastSearch = '-' + search;
+    } else {
+        lastSearch = search;
+    }
+    fillPage();
+};
+
+var sortByKey = function(array, priorityKey, secondaryKey) {
+    return array.sort(function(a, b) {
+        return a[priorityKey] < b[priorityKey]
+            ? -1
+            : a[priorityKey] > b[priorityKey]
+            ? 1
+            : a[secondaryKey] < b[secondaryKey]
+            ? -1
+            : a[secondaryKey] > b[secondaryKey]
+            ? 1
+            : 0;
+    });
 };

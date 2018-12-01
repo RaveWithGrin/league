@@ -34,66 +34,37 @@
                 <input id="usernameBox" placeholder="Username">
                 <button id="usernameButton" onclick="searchUser()">Search</button>
             </div>
-            <!--div class='sortBox'>
-                <div class='sort' onclick='updateSort("name")'>Name</div>
-                <div class='sort' onclick='updateSort("championPoints")'>Points</div>
-                <div class='sort' onclick='updateSort("championPointsUntilNextLevel")'>Needed
-                    Points</div>
-                <div class='sort' onclick='updateSort("progress")'>Progress</div>
-            </div>
-            <div class='filterBox'>
-                <div class='filter'>Chest
-                    <input type='radio' name='chestOption' onclick='updateChestFilter(this)' id='chestAll' value='all'
-                        checked>
-                    <label for='chestAll'>All</label>
-                    <input type='radio' name='chestOption' onclick='updateChestFilter(this)' id='chestGranted' value=true>
-                    <label for='chestGranted'>Granted</label>
-                    <input type='radio' name='chestOption' onclick='updateChestFilter(this)' id='chestNeeded' value=false>
-                    <label for='chestNeeded'>Needed</label>
-                </div>
-                <div class='filter'>Tag
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagAll' value='all'
-                        checked>
-                    <label for='tagAll'>All</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagAssassin' value='Assassin'>
-                    <label for='tagAssassin'>Assassin</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagFighter' value='Fighter'>
-                    <label for='tagFighter'>Fighter</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagMage' value='Mage'>
-                    <label for='tagMage'>Mage</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagMarksman' value='Marksman'>
-                    <label for='tagMage'>Marksman</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagSupport' value='Support'>
-                    <label for='tagSupport'>Support</label>
-                    <input type='radio' name='tagOption' onclick='updateTagFilter(this)' id='tagTank' value='Tank'>
-                    <label for='tagTank'>Tank</label>
-                </div>
-            </div-->
         </div>
-        <div class='tab'>
-            <button class='tablinks' onclick='switchTab(event, "allMasteries")'>All</button>
-            <button class='tablinks' onclick='switchTab(event, "roleMasteries")'>Role</button>
-            <button class='tablinks' onclick='switchTab(event, "chestMasteries")'>Chest Earned</button>
-            <button class='tablinks' onclick='switchTab(event, "levelMasteries")'>Mastery Level</button>
+        <div class='tab' id='filterTabs'>
+            <button class='masteryTabLinks' onclick='switchMasteryTab(event, "allMasteries")'>All</button>
+            <button class='masteryTabLinks' onclick='switchMasteryTab(event, "roleMasteries")'>Role</button>
+            <button class='masteryTabLinks' onclick='switchMasteryTab(event, "chestMasteries")'>Chest Earned</button>
+            <button class='masteryTabLinks' onclick='switchMasteryTab(event, "levelMasteries")'>Mastery Level</button>
         </div>
-        <div class='masteriesBox tabcontent' id='allMasteries'></div>
-        <div class='masteriesBox tabcontent' id='roleMasteries' style="display: none">
-            <div class='masteriesSubBox' id='AssassinSubBox'>Assassins</div>
-            <div class='masteriesSubBox' id='FighterSubBox'>Fighters</div>
-            <div class='masteriesSubBox' id='MageSubBox'>Mages</div>
-            <div class='masteriesSubBox' id='MarksmanSubBox'>Marksmen</div>
-            <div class='masteriesSubBox' id='SupportSubBox'>Supports</div>
-            <div class='masteriesSubBox' id='TankSubBox'>Tanks</div>
+        <div class='tab' id='searchTabs'>
+            <button class='searchTabLinks' onclick='switchSearch(event, "name")'>Name</button>
+            <button class='searchTabLinks' onclick='switchSearch(event, "championPoints")'>Points</button>
+            <button class='searchTabLinks' onclick='switchSearch(event, "championPointsUntilNextLevel")'>Needed Points</button>
+            <button class='searchTabLinks' onclick='switchSearch(event, "progress")'>Progress</button>
         </div>
-        <div class='masteriesBox tabcontent' id='chestMasteries' style="display: none">
+        <div class='masteriesBox masteryTabContent' id='allMasteries'></div>
+        <div class='masteriesBox masteryTabContent' id='roleMasteries' style="display: none">
+            <div class='masteriesSubBox' id='AssassinSubBox'></div>
+            <div class='masteriesSubBox' id='FighterSubBox'></div>
+            <div class='masteriesSubBox' id='MageSubBox'></div>
+            <div class='masteriesSubBox' id='MarksmanSubBox'></div>
+            <div class='masteriesSubBox' id='SupportSubBox'></div>
+            <div class='masteriesSubBox' id='TankSubBox'></div>
+        </div>
+        <div class='masteriesBox masteryTabContent' id='chestMasteries' style="display: none">
             <div class='masteriesSubBox' id='chesttrueSubBox'>Chest Earned</div>
             <div class='masteriesSubBox' id='chestfalseSubBox'>Chest Needed</div>
         </div>
-        <div class='masteriesBox tabcontent' id='levelMasteries' style="display: none">
+        <div class='masteriesBox masteryTabContent' id='levelMasteries' style="display: none">
             <div class='masteriesSubBox' id='level1SubBox'>Level 1</div>
             <div class='masteriesSubBox' id='level2SubBox'>Level 2</div>
             <div class='masteriesSubBox' id='level3SubBox'>Level 3</div>
-            <div class='masteriesSubBox' id='level4rSubBox'>Level 4</div>
+            <div class='masteriesSubBox' id='level4SubBox'>Level 4</div>
             <div class='masteriesSubBox' id='level5SubBox'>Level 5</div>
             <div class='masteriesSubBox' id='level6SubBox'>Level 6</div>
             <div class='masteriesSubBox' id='level7SubBox'>Level 7</div>
