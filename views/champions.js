@@ -3,6 +3,13 @@ var summoner;
 var stats;
 var champion;
 
+var websocket = new WebSocket('ws://localhost:8082/champion');
+
+websocket.onmessage = function(event) {
+    var message = JSON.parse(event.data);
+    console.log(JSON.stringify(message, null, 2));
+};
+
 // On load
 $(function() {
     // Get username if it exists and update the text box
@@ -20,16 +27,6 @@ $(function() {
     });
 });
 
-var setVariables = function(data) {
-    if (data) {
-        currentVersion = data.version;
-        summoner = data.summoner;
-        stats = data.stats;
-        champion = data.champion;
-        displayGames();
-    }
-};
-
 // Return paramter value from URL if it exists, true if no value, false if parameter is missing
 var getURLParamter = function(param) {
     // Remove leading '?'
@@ -45,65 +42,15 @@ var getURLParamter = function(param) {
     return false;
 };
 
-var displayGames = function() {
-    $('#gamesBox').empty();
-    var totalKills = 0;
-    var totalDeaths = 0;
-    var totalAssists = 0;
-    var largestMultikill = 0;
-    var totalWins = 0;
-    for (var i = 0; i < stats.length; i++) {
-        var game = stats[i];
-        totalKills += game.kills;
-        totalDeaths += game.deaths;
-        totalAssists += game.assists;
-        totalWins += game.win;
-        if (game.largestMultikill > largestMultikill) {
-            largestMultikill = game.largestMultikill;
-        }
-        console.log(game);
-        var html = '<div class="game' + (game.win === 1 ? ' win' : ' loss') + '">';
-        html += '<div class="level">Level ' + game.champLevel + '</div>';
-        html += '<div class="kda">';
-        var kda = ((game.kills + game.assists) / (game.deaths > 0 ? game.deaths : 1)).toFixed(2);
-        html += game.kills + ' / ' + game.deaths + ' / ' + game.assists + ' - ' + kda;
-        html += '</div>';
-        html += '<div class="itemsBox">';
-        for (var j = 1; j < 7; j++) {
-            if (game['item' + j + 'Id'] !== null) {
-                html +=
-                    '<div class="item"><img src="http://ddragon.leagueoflegends.com/cdn/' +
-                    currentVersion +
-                    '/img/item/' +
-                    game['item' + j + 'Id'] +
-                    '.png" alt="' +
-                    game['item' + j + 'Name'] +
-                    '" style="width: 30px"></div>';
-            }
-        }
-        html += '</div>';
-        if (game.trinketId !== null) {
-            html +=
-                '<div class="item"><img src="http://ddragon.leagueoflegends.com/cdn/' +
-                currentVersion +
-                '/img/item/' +
-                game.trinketId +
-                '.png" alt="' +
-                game.trinketName +
-                '" style="width: 30px"></div>';
-        }
-        html += '</div>';
-        $('#gamesBox').append(html);
-    }
-    var html = '<div class="overallStats">';
-    html += '<div class="kda">';
-    var kda = ((totalKills + totalAssists) / (totalDeaths > 0 ? totalDeaths : 1)).toFixed(2);
-    html += totalKills + ' / ' + totalDeaths + ' / ' + totalAssists + ' - ' + kda;
-    html += '</div>';
-    html += '<div class="winPercentage">';
-    var winPercentage = ((totalWins / stats.length) * 100).toFixed(2);
-    html += totalWins + ' wins /' + stats.length + ' games - ' + winPercentage + '% winrate';
-    html += '</div>';
-    html += '</div>';
-    $('#gamesBox').prepend(html);
+var showSplash = function() {
+    var randomSkin = skins[Math.floor(Math.random() * skins.length)];
+    var html =
+        '<img src="http://ddragon.leagueoflegends.com/cdn/img/champion/loading/' +
+        champion.key +
+        '_' +
+        randomSkin.number +
+        '.jpg" alt"' +
+        champion.key +
+        '" style="height: 560px">';
+    $('#statsBox').append(html);
 };

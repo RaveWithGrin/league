@@ -10,14 +10,6 @@
     <link rel='stylesheet' href='../views/champions.css' type='text/css' />
 </head>
 
-<% if (data !== null){ %>
-<% var champion = data.champion; %>
-<% var summoner = data.summoner; %>
-<% } else { %>
-<% var champion = ''; %>
-<% var summoner = ''; %>
-<% } %>
-
 <body>
     <div class="container">
         <div class="masthead">
@@ -43,12 +35,7 @@
                 <button id="usernameButton" onclick="searchUser()">Search</button>
             </div>
         </div>
-        <div class='statsBox'>
-            <% var randomSkin = data.skins[Math.floor(Math.random() * data.skins.length)]; %>
-            <img src='http://ddragon.leagueoflegends.com/cdn/img/champion/loading/<%= champion.key %>_<%= randomSkin.number %>.jpg' alt='<%= champion.key %>' style='height: 560px'>
-            <div class='gamesBox' id='gamesBox'>
-
-            </div>
+        <div class='statsBox' id='statsBox'>
         </div>
     </div>
     <script src='../views/champions.js'></script>

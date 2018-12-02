@@ -80,52 +80,6 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
         res.render('stats.ejs');
     });
 
-    app.get('/getUserMasteries', async function(req, res) {
-        if (req.query.user) {
-            var currentVersion = await staticData.getVersion();
-            var summonerResult = await userData.summoner.get(req.query.user);
-            if (summonerResult.error) {
-                res.send(JSON.stringify({ error: 'Unknown summoner' }));
-            } else {
-                var summoner = summonerResult.data;
-                userData.summoner.save(summoner);
-                var championResult = await staticData.getChampions();
-                if (championResult.error) {
-                    res.send(JSON.stringify({ error: 'Problem with the API' }));
-                } else {
-                    var champions = championResult.data;
-                    var masteriesResult = await userData.championMasteries.get(summoner);
-                    if (masteriesResult.error) {
-                        res.send(JSON.stringify({ error: 'Problem with the API' }));
-                    } else {
-                        var masteries = masteriesResult.data;
-                        userData.championMasteries.save(masteries, summoner.name);
-                        for (var i = 0; i < champions.length; i++) {
-                            var champion = champions[i];
-                            for (var j = 0; j < masteries.length; j++) {
-                                var mastery = masteries[j];
-                                if (parseInt(champion.id) === mastery.championId) {
-                                    Object.assign(champion, mastery);
-                                }
-                            }
-                        }
-                        res.send(
-                            JSON.stringify({
-                                data: {
-                                    summoner: summoner,
-                                    champions: champions,
-                                    version: currentVersion
-                                }
-                            })
-                        );
-                    }
-                }
-            }
-        } else {
-            res.send(JSON.stringify({ error: 'Unknown summoner' }));
-        }
-    });
-
     app.get(/^(\/static\/.+)$/, function(req, res) {
         res.sendFile(path.join(__dirname, '../', req.params[0]));
     });
@@ -155,6 +109,27 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
         });
         ws.on('close', function() {
             console.log('WS was closed');
+        });
+    });
+
+    app.ws('/champion', function(ws, req) {
+        ws.on('message', async function(msg) {
+            var message = JSON.parse(msg);
+            logger.info(JSON.stringify(message));
+            ws.send(msg);
+            var messageType = message.type;
+            switch (messageType) {
+                case 'championGames':
+                    var summonerName = message.summonerName;
+                    var championName = message.championName;
+                    getSummonerChampionGames(ws, summonerName, championName);
+                    break;
+                default:
+                    ws.send('Unknown message type [' + message.type + ']');
+            }
+        });
+        ws.on('close', function() {
+            console.log('WS closed');
         });
     });
 
@@ -211,6 +186,63 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
                             result: 'success',
                             type: 'championMasteries',
                             data: champions
+                        })
+                    );
+                }
+            }
+        }
+    };
+
+    var getSummonerChampionGames = async function(ws, summonerName, championName) {
+        var summonerResult = await userData.summoner.get(summonerName);
+        if (summonerResult.error) {
+            ws.send(
+                JSON.stringify({
+                    result: 'error',
+                    type: 'championGames',
+                    message: 'Error getting summoner from API',
+                    data: summonerResult.error
+                })
+            );
+        } else {
+            var summoner = summonerResult.data;
+            userData.summoner.save(summoner);
+            var championResult = await staticData.getChampions();
+            if (championResult.error) {
+                ws.send(
+                    JSON.stringify({
+                        result: 'error',
+                        type: 'championGames',
+                        message: 'Error getting champions from API',
+                        data: championResult.error
+                    })
+                );
+            } else {
+                var champions = championResult.data;
+                var champion =
+                    champions[
+                        champions
+                            .map(function(el) {
+                                return el.key;
+                            })
+                            .indexOf(championName)
+                    ];
+                var statsResult = await db.select.stats(summoner.name, champion.id);
+                if (statsResult.error) {
+                    ws.send(
+                        JSON.stringify({
+                            result: 'error',
+                            type: 'championGames',
+                            message: 'Error getting games from DB',
+                            data: statsResult.error
+                        })
+                    );
+                } else {
+                    ws.send(
+                        JSON.stringify({
+                            result: 'success',
+                            type: 'championGames',
+                            data: statsResult.data
                         })
                     );
                 }
