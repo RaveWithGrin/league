@@ -129,6 +129,7 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
             }
         });
         ws.on('close', function() {
+            logger.debug('WS closed [' + ws + ']');
             console.log('WS closed');
         });
     });
