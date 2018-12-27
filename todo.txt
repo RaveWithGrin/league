@@ -1,3 +1,2 @@
-add new stat perks
 for any webserver page, convert to websocket, send data from database first, then pull new data and send that, then store data in database
 if database connection fails, send data from api, if api data fails, send error message that data is accurate as of MM/DD HH:MM

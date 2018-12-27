@@ -1,17 +1,19 @@
-require('yargs')
-  .command(['start [app]', 'run', 'up'], 'Start up an app', {}, (argv) => {
-          console.log('starting up the', argv.app || 'default', 'app')
-        })
-  .command({
-          command: 'configure <key> [value]',
-          aliases: ['config', 'cfg'],
-          desc: 'Set a config variable',
-          builder: (yargs) => yargs.default('value', 'true'),
-          handler: (argv) => {
-                    console.log(`setting ${argv.key} to ${argv.value}`)
-                  }
-        })
-  .demandCommand()
-  .help()
-  .wrap(72)
-  .argv
+//var logger = require('./logger')('silly');
+var logger = require('./logger')('debug');
+var api = require('./apiCaller_v4')(logger);
+var db = require('./dbCaller')(logger);
+
+var staticData = require('./staticData')(logger, api, db);
+var userData = require('./userData_v4')(logger, api, db);
+var matchData = require('./matchData_v4')(logger, api, db);
+
+var main = async function(){
+    await matchData.processMatchList(1);
+};
+
+main();
+
+process.on('unhandledRejection', function(error){
+    console.error(error);
+    process.exit(1);
+});

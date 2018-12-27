@@ -1,8 +1,8 @@
 var database = require('./config/database');
-var mysql = require('promise-mysql');
+var database = require('mariadb');
 
 module.exports = function(logger) {
-    var pool = mysql.createPool(database.connection);
+    var pool = database.createPool(database.connection);
 
     var runQuery = async function(sql, options) {
         try {
@@ -17,7 +17,7 @@ module.exports = function(logger) {
                 logger.error(JSON.stringify(error));
                 return { error: error };
             } finally {
-                connection.release();
+                connection.end();
             }
         } catch (error) {
             logger.error(JSON.stringify(error));

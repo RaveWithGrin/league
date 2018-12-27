@@ -21,18 +21,14 @@ module.exports = function(logger, api, db) {
                 };
                 champions.push(champion);
             }
-            return { data: champions };
+            logger.debug('Inserting champions into DB');
+            var championPromises = [];
+            for (var key in champions) {
+                championPromises.push(db.insert.champions(champions[key]));
+            }
+            await Promise.all(championPromises);
+            logger.info('Done inserting champions');
         }
-    };
-
-    var saveChampions = async function(champions) {
-        logger.debug('Inserting champions into DB');
-        var championPromises = [];
-        for (var key in champions) {
-            championPromises.push(db.insert.champions(champions[key]));
-        }
-        await Promise.all(championPromises);
-        logger.info('Done inserting champions');
     };
 
     var getItems = async function() {
@@ -42,45 +38,40 @@ module.exports = function(logger, api, db) {
             logger.error('Unable to get items from API');
         } else {
             var items = itemsResult.data.data;
-            return { data: items };
-        }
-    };
-
-    var saveItems = async function(items) {
-        var itemPromises = [];
-        logger.debug('Inserting items into DB');
-        for (var key in items) {
-            var item = {
-                id: key,
-                name: items[key].name,
-                description: items[key].description,
-                plaintext: items[key].plaintext
-            };
-            itemPromises.push(db.insert.items(item));
-        }
-        await Promise.all(itemPromises);
-        logger.info('Done inserting items');
-    };
-
-    var getMasteries = async function() {
-        logger.debug('Getting masteries from API');
-        var masteriesResult = await api.static.masteries();
-        if (masteriesResult.error) {
-            logger.error('Unable to get masteries from API');
-        } else {
-            var masteries = masteriesResult.data.data;
-            var masteryPromises = [];
-            logger.debug('Inserting masteries into DB');
-            for (var key in masteries) {
-                var mastery = {
-                    id: masteries[key].id,
-                    name: masteries[key].name,
-                    description: masteries[key].description.join(', ')
+            var itemPromises = [];
+            logger.debug('Inserting items into DB');
+            for (var key in items) {
+                var item = {
+                    id: key,
+                    name: items[key].name,
+                    description: items[key].description,
+                    plaintext: items[key].plaintext
                 };
-                masteryPromises.push(db.insert.masteries(mastery));
+                itemPromises.push(db.insert.items(item));
             }
-            await Promise.all(masteryPromises);
-            logger.info('Done inserting masteries');
+            await Promise.all(itemPromises);
+            logger.info('Done inserting items');
+        }
+    };
+
+    var getMaps = async function() {
+        logger.debug('Getting maps from API');
+        var mapsResult = await api.static.maps();
+        if (mapsResult.error) {
+            logger.error('Unable to get maps from API');
+        } else {
+            var maps = mapsResult.data.data;
+            var mapPromises = [];
+            logger.debug('Inserting maps into DB');
+            for (var key in maps) {
+                var map = {
+                    id: key,
+                    name: maps[key].MapName
+                };
+                mapPromises.push(db.insert.maps(map));
+            }
+            await Promise.all(mapPromises);
+            logger.info('Done inserting maps');
         }
     };
 
@@ -93,19 +84,24 @@ module.exports = function(logger, api, db) {
             runesResult = runesResult.data;
             var runePromises = [];
             logger.debug('Inserting runes into DB');
-            for (var key in runesResult.data) {
-                for (var slot in runesResult[key].slots) {
-                    var rune = {
-                        id: runesResult[key][slot].id,
-                        key: runesResult[key][slot].key,
-                        name: runesResult[key][slot].name,
-                        shortDesc: runesResult[key][slot].shortDesc,
-                        longDesc: runesResult[key][slot].longDesc,
-                        icon: runesResult[key][slot].icon,
-                        runePathId: runesResult[key].id,
-                        runePathName: runesResult[key].name
-                    };
-                    runePromises.push(db.insert.runes(rune));
+            for (var i = 0; i < runesResult.length; i++) {
+                var path = runesResult[i];
+                for (var j = 0; j < path.slots.length; j++){
+                    var slot = path.slots[j];
+                    for (var k = 0; k < slot.runes.length; k++){
+                        var rawRune = slot.runes[k];
+                        var rune = {
+                            id: rawRune.id,
+                            key: rawRune.key,
+                            name: rawRune.name,
+                            shortDesc: rawRune.shortDesc,
+                            longDesc: rawRune.longDesc,
+                            icon: rawRune.icon,
+                            runePathId: path.id,
+                            runePathName: path.name
+                        };
+                        runePromises.push(db.insert.runes(rune));
+                    }
                 }
             }
             await Promise.all(runePromises);
@@ -172,10 +168,9 @@ module.exports = function(logger, api, db) {
     var getAll = async function(){
         logger.info('Getting all static data');
         var staticDataPromises = [];
-        var champions = await getChampions();
-        staticDataPromises.push(saveChampions(champions.data));
-        var items = await getItems();
-        staticDataPromises.push(saveItems(items.data));
+        staticDataPromises.push(getChampions());
+        staticDataPromises.push(getItems());
+        staticDataPromises.push(getMaps());
         staticDataPromises.push(getRunes());
         staticDataPromises.push(getSpells());
         staticDataPromises.push(getSkins());
@@ -185,10 +180,8 @@ module.exports = function(logger, api, db) {
 
     return {
         getChampions: getChampions,
-        saveChampions: saveChampions,
         getItems: getItems,
-        saveItems: saveItems,
-        getMasteries: getMasteries,
+        getMaps: getMaps,
         getRunes: getRunes,
         getSpells: getSpells,
         getSkins: getSkins,

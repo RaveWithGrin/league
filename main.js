@@ -1,4 +1,4 @@
-var logger = require('./logger')('info');
+var logger = require('./logger')('debug');
 var api = require('./apiCaller')(logger);
 var db = require('./dbCaller')(logger);
 
@@ -9,10 +9,10 @@ var userTest = require('./singleUserTest')(logger, userData);
 var webserver = require('./webserver')(logger, staticData, userData, matchData, db);
 
 var main = async function() {
-    //await staticData.getAll();
+    await staticData.getAll();
     //await userTest.pipeline('Rave With Grin');
     //await matchData.processMatchList(10);
-    webserver.start();
+    //webserver.start();
 };
 
 main();
