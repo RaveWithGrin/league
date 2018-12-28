@@ -1,8 +1,8 @@
-var database = require('./config/database');
+var databaseConfig = require('./config/database');
 var database = require('mariadb');
 
 module.exports = function(logger) {
-    var pool = database.createPool(database.connection);
+    var pool = database.createPool(databaseConfig.connection);
 
     var runQuery = async function(sql, options) {
         try {
@@ -14,12 +14,16 @@ module.exports = function(logger) {
                 logger.silly(JSON.stringify(result));
                 return { data: result };
             } catch (error) {
+                throw error;
+                logger.error(sql);
+                logger.error(JSON.stringify(options));
                 logger.error(JSON.stringify(error));
                 return { error: error };
             } finally {
                 connection.end();
             }
         } catch (error) {
+            throw error;
             logger.error(JSON.stringify(error));
             return { error: error };
         }
@@ -124,7 +128,7 @@ module.exports = function(logger) {
             return await runQuery('SELECT * FROM summoner WHERE name IN [?]', usernames);
         },
         summonerByIds: async function(ids) {
-            return await runQuery('SELECT * FROM summoner WHERE id IN (?) ORDER BY id ASC', [ids]);
+            return await runQuery('SELECT * FROM summoner WHERE id IN (?) ORDER BY id ASC', ids);
         },
         championMasteries: async function(summonerId) {
             return await runQuery(

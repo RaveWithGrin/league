@@ -36,9 +36,9 @@ module.exports = function(logger, api, db) {
             logger.info('Inserted [' + newGames.length + '] into DB');
             if (newGames.length === limit) {
                 logger.info('Waiting 5s');
-                //setTimeout(function() {
-                //    processMatchList(limit);
-                //}, 5000);
+                setTimeout(function() {
+                    processMatchList(limit);
+                }, 5000);
             } else {
                 logger.info('All games in DB processed');
             }
