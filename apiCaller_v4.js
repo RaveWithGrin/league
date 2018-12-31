@@ -31,10 +31,9 @@ module.exports = function(logger) {
             logger.silly('https://ddragon.leagueoflegends.com/api/versions.json');
             var response = await request.get('https://ddragon.leagueoflegends.com/api/versions.json');
             logger.silly(JSON.stringify(response));
-            return JSON.parse(response)[0];
-        } else {
-            return currentVersion;
+            currentVersion = JSON.parse(response)[0];
         }
+        return currentVersion;
     };
 
     var callDdragon = async function(url) {

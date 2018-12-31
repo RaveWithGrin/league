@@ -19,30 +19,36 @@ module.exports = function(logger, api, db) {
     };
 
     var processMatchList = async function(limit = 1) {
-        logger.info('Getting non-processed matches from DB');
-        logger.debug('Getting [' + limit + '] game(s) from DB');
-        var newGames = await db.select.newGames(limit);
-        if (newGames.error) {
-            logger.error('Unable to get new games from DB');
-        } else {
-            newGames = newGames.data;
-            logger.debug('Got [' + newGames.length + '] game(s) from DB');
-            var matchPromises = [];
-            for (var i = 0; i < newGames.length; i++) {
-                var game = newGames[i];
-                matchPromises.push(getMatch(game));
-            }
-            await Promise.all(matchPromises);
-            logger.info('Inserted [' + newGames.length + '] into DB');
-            if (newGames.length === limit) {
-                logger.info('Waiting 5s');
-                setTimeout(function() {
-                    processMatchList(limit);
-                }, 5000);
-            } else {
-                logger.info('All games in DB processed');
+        var matchesToProcess = true;
+        while (matchesToProcess){
+            try {
+                logger.info('Getting non-process matches from DB');
+                logger.debug('Getting [' + limit + '] game(s) from DB');
+                var newGames = await db.select.newGames(limit);
+                if (newGames.error) {
+                    logger.error('Unable to get any new games from DB');
+                    matchesToPorcess = false;
+                } else {
+                    newGames = newGames.data;
+                    logger.debug('Got [' + newGames.length + '] game(s) from DB');
+                    var matchPromises = [];
+                    for (var i = 0; i < newGames.length; i++){
+                        var game = newGames[i];
+                        matchPromises.push(getMatch(game));
+                    }
+                    await Promise.all(matchPromises);
+                    logger.info('Inserted [' + newGames.length +'] into DB');
+                    if (newGames.length !== limit){
+                        logger.info('All games in DB processed');
+                        matchesToProcess = false;
+                    }
+                }
+            } catch (error) {
+                logger.error(error);
+                matchesToProcess = false;
             }
         }
+
     };
 
     var handleSummoners = async function(participantIdentities, gameId, platformId) {

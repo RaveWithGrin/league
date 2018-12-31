@@ -9,7 +9,7 @@ module.exports = function(logger) {
             var connection = await pool.getConnection();
             try {
                 logger.silly(sql);
-                logger.silly(options);
+                logger.silly(JSON.stringify(options));
                 var result = await connection.query(sql, options);
                 logger.silly(JSON.stringify(result));
                 return { data: result };
@@ -207,9 +207,10 @@ module.exports = function(logger) {
                         delete participant.timeline;
                         logger.silly('INSERT INTO participants SET ?');
                         logger.silly(JSON.stringify(participant));
-                        participantPromises.push(await connection.query('INSERT INTO participants SET ?', participant));
+                        //participantPromises.push(connection.query('INSERT INTO participants SET ?', participant));
+                        await connection.query('INSERT INTO participants SET ?', participant);
                     }
-                    await Promise.all(participantPromises);
+                    //await Promise.all(participantPromises);
                     logger.debug('Participants + stats + timeline inserted for match matchId=[' + gameId + '] into DB');
                     logger.debug('Updating match matchId=[' + gameId + '] in DB');
                     await connection.query('UPDATE matches SET ? WHERE id = ?', [match.match, gameId]);
@@ -230,10 +231,20 @@ module.exports = function(logger) {
         }
     };
 
+    var end = async function(){
+        try {
+            await pool.end();
+            logger.info('DB pool closed');
+        } catch (error){
+            logger.error(error);
+        }
+    };
+
     return {
         insert: insert,
         update: update,
         select: select,
-        transaction: transaction
+        transaction: transaction,
+        end: end
     };
 };

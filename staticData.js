@@ -17,7 +17,7 @@ module.exports = function(logger, api, db) {
                     name: rawChampions[key].name,
                     title: rawChampions[key].title,
                     tag1: rawChampions[key].tags[0],
-                    tag2: rawChampions[key].tags[1]
+                    tag2: rawChampions[key].tags[1] ? rawChampions[key].tags[1] : ''
                 };
                 champions.push(champion);
             }
