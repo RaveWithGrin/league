@@ -22,7 +22,7 @@ module.exports = function(logger, api, db) {
         var matchesToProcess = true;
         while (matchesToProcess){
             try {
-                logger.info('Getting non-process matches from DB');
+                logger.info('Getting non-processed matches from DB');
                 logger.debug('Getting [' + limit + '] game(s) from DB');
                 var newGames = await db.select.newGames(limit);
                 if (newGames.error) {
@@ -55,10 +55,12 @@ module.exports = function(logger, api, db) {
         logger.debug('Parsing summoners for match matchId=[' + gameId + ']');
         var summonerIds = [];
         var summoners = {};
-        for (var id in participantIdentities) {
-            summoners[parseInt(id) + 1] = 0;
-            if (participantIdentities[id].player.hasOwnProperty('summonerId')) {
-                summonerIds.push(participantIdentities[id].player.summonerId);
+        for (var i = 0; i < participantIdentities.length; i++){
+            var participant = participantIdentities[i];
+            summoners[parseInt(participant.participantId)] = 0;
+            if (participant.player.hasOwnProperty('summonerId')) {
+                summonerIds.push(participant.player.summonerId);
+                summoners[parseInt(participant.participantId)] = participant.player.summonerId;
             }
         }
         logger.debug('Getting known summoners from DB for match matchId=[' + gameId + '] from DB');

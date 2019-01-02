@@ -1,6 +1,6 @@
-var logger = require('./logger')('silly');
+//var logger = require('./logger')('silly');
 //var logger = require('./logger')('debug');
-//var logger = require('./logger')('info');
+var logger = require('./logger')('info');
 var api = require('./apiCaller_v4')(logger);
 var db = require('./dbCaller_v4')(logger);
 

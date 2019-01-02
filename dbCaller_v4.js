@@ -1,4 +1,5 @@
 var databaseConfig = require('./config/database');
+var sqlstring = require('sqlstring');
 var database = require('mariadb');
 
 module.exports = function(logger) {
@@ -128,7 +129,7 @@ module.exports = function(logger) {
             return await runQuery('SELECT * FROM summoner WHERE name IN [?]', usernames);
         },
         summonerByIds: async function(ids) {
-            return await runQuery('SELECT * FROM summoner WHERE id IN (?) ORDER BY id ASC', ids);
+            return await runQuery('SELECT * FROM summoner WHERE id IN ' + sqlstring.escape([ids]) + ' ORDER BY id ASC');
         },
         championMasteries: async function(summonerId) {
             return await runQuery(
