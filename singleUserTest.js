@@ -1,6 +1,6 @@
-﻿import Promise from 'bluebird';
+﻿var Promise = require('bluebird');
 
-export default function(logger, userData) {
+module.exports = function(logger, userData) {
     var pipeline = async function(summonerName) {
         var summoner = await userData.summoner.get(summonerName);
         if (summoner.error) {
@@ -36,4 +36,4 @@ export default function(logger, userData) {
     return {
         pipeline: pipeline
     };
-}
+};

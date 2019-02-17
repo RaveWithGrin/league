@@ -1,9 +1,8 @@
-import { connection as _connection } from './config/database';
-import { escape } from 'sqlstring';
-import { createPool } from 'mariadb';
+var databaseConfig = require('./config/database');
+var database = require('mariadb');
 
-export default function(logger) {
-    var pool = createPool(_connection);
+module.exports = function(logger) {
+    var pool = database.createPool(databaseConfig.connection);
 
     var runQuery = async function(sql, options) {
         try {
@@ -126,10 +125,10 @@ export default function(logger) {
             return result;
         },
         summonerByName: async function(usernames) {
-            return await runQuery('SELECT * FROM summoner WHERE name IN [?]', usernames);
+            return await runQuery('SELECT * FROM summoner WHERE name IN (?)', usernames);
         },
         summonerByIds: async function(ids) {
-            return await runQuery('SELECT * FROM summoner WHERE id IN ' + escape([ids]) + ' ORDER BY id ASC');
+            return await runQuery('SELECT * FROM summoner WHERE id IN (?) ORDER BY id ASC', ids);
         },
         championMasteries: async function(summonerId) {
             return await runQuery(
@@ -208,10 +207,8 @@ export default function(logger) {
                         delete participant.timeline;
                         logger.silly('INSERT INTO participants SET ?');
                         logger.silly(JSON.stringify(participant));
-                        //participantPromises.push(connection.query('INSERT INTO participants SET ?', participant));
                         await connection.query('INSERT INTO participants SET ?', participant);
                     }
-                    //await Promise.all(participantPromises);
                     logger.debug('Participants + stats + timeline inserted for match matchId=[' + gameId + '] into DB');
                     logger.debug('Updating match matchId=[' + gameId + '] in DB');
                     await connection.query('UPDATE matches SET ? WHERE id = ?', [match.match, gameId]);
@@ -248,4 +245,4 @@ export default function(logger) {
         transaction: transaction,
         end: end
     };
-}
+};

@@ -1,6 +1,6 @@
-import { all } from 'bluebird';
+var Promise = require('bluebird');
 
-export default function(logger, api, db) {
+module.exports = function(logger, api, db) {
     var summoner = {
         get: async function(name) {
             logger.debug('Getting summoner summonerName=[' + name + '] from API');
@@ -45,7 +45,7 @@ export default function(logger, api, db) {
                 var mastery = masteriesArray[i];
                 masteriesPromises.push(db.insert.championMasteries(mastery));
             }
-            await all(masteriesPromises);
+            await Promise.all(masteriesPromises);
             logger.info('Done inserting champion masteries for summonerName=[' + summonerName + '] into DB');
             return { data: 'Done' };
         }
@@ -70,7 +70,7 @@ export default function(logger, api, db) {
                 var league = leaguesArray[i];
                 leaguesPromises.push(db.insert.leaguePosition(league));
             }
-            await all(leaguesPromises);
+            await Promise.all(leaguesPromises);
             logger.info('Done inserting league positions for summonerName=[' + summoner.name + '] into DB');
             return { data: 'Done' };
         }
@@ -152,7 +152,7 @@ export default function(logger, api, db) {
                 match.playerId = summoner.id;
                 matchlistPromises.push(db.insert.matchList(match));
             }
-            await all(matchlistPromises);
+            await Promise.all(matchlistPromises);
             logger.info('Done inserting all matches for summonerName=[' + summoner.name + '] into DB');
             return { data: 'Done' };
         },
@@ -171,7 +171,7 @@ export default function(logger, api, db) {
                     match.playerId = summoner.id;
                     matchlistPromises.push(db.insert.matchList(match));
                 }
-                await all(matchlistArray);
+                await Promise.all(matchlistArray);
                 if (!full) {
                     logger.info('Done inserting recent matches for summonerName=[' + summoner.name + '] into DB');
                     return { data: 'Done' };
@@ -194,7 +194,7 @@ export default function(logger, api, db) {
                                 match.playerId = summoner.id;
                                 matchlistPromises.push(db.insert.matchList(match));
                             }
-                            await all(matchlistPromises);
+                            await Promise.all(matchlistPromises);
                             logger.info('Done inserting more matches for summonerName=[' + summoner.name + '] into DB');
                             totalGames = JSON.parse(matchlistResponse.data).totalGames;
                             endIndex = JSON.parse(matchlistResponse.data).endIndex;
@@ -213,4 +213,4 @@ export default function(logger, api, db) {
         leaguePosition: leaguePosition,
         matchList: matchList
     };
-}
+};

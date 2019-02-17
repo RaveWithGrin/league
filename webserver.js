@@ -1,12 +1,12 @@
 ﻿'use strict';
-import express from 'express';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import { json, urlencoded } from 'body-parser';
-import { basename } from 'path';
-var fileName = basename(__filename);
+var express = require('express');
+var morgan = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var path = require('path');
+var fileName = path.basename(__filename);
 
-export default function(logger, staticData, userData, matchData, db) {
+module.exports = function(logger, staticData, userData, matchData, db) {
     var start = function() {
         var app = express();
         var expressWs = require('express-ws')(app);
@@ -29,8 +29,8 @@ export default function(logger, staticData, userData, matchData, db) {
                 }
             })
         );
-        app.use(json());
-        app.use(urlencoded({ extended: true }));
+        app.use(bodyParser.json());
+        app.use(bodyParser.urlencoded({ extended: true }));
         app.use(cookieParser());
 
         app.set('view engine', 'ejs');
@@ -44,4 +44,4 @@ export default function(logger, staticData, userData, matchData, db) {
     return {
         start: start
     };
-}
+};

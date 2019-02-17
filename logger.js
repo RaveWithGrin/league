@@ -1,7 +1,7 @@
-import { createLogger, format as _format, transports as _transports } from 'winston';
-import { basename } from 'path';
+var winston = require('winston');
+var path = require('path');
 
-export default function(level) {
+module.exports = function(level) {
     var CustomError = function() {
         var oldStackTrace = Error.prepareStackTrace;
         var oldLimit = Error.stackTraceLimit;
@@ -20,18 +20,18 @@ export default function(level) {
         var stack = new CustomError().stack;
         var CALLER_INDEX = 2;
         var element = stack[CALLER_INDEX];
-        var fileName = basename(element.getFileName());
+        var fileName = path.basename(element.getFileName());
         return '[' + element.getFunctionName() + '](' + fileName + ':' + element.getLineNumber() + ')';
     };
 
-    var winstonLogger = createLogger({
-        format: _format.combine(
-            _format.timestamp(),
-            _format.printf(function(msg) {
+    var winstonLogger = winston.createLogger({
+        format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.printf(function(msg) {
                 return msg.timestamp + ' ' + msg.level.toUpperCase() + ' ' + msg.message;
             })
         ),
-        transports: [new _transports.Console()],
+        transports: [new winston.transports.Console()],
         level: level
     });
 
@@ -56,4 +56,4 @@ export default function(level) {
         }
     };
     return logger;
-}
+};

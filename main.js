@@ -9,10 +9,11 @@ var userTest = require('./singleUserTest')(logger, userData);
 var webserver = require('./webserver')(logger, staticData, userData, matchData, db);
 
 var main = async function() {
-    await staticData.getAll();
+    //await staticData.getAll();
     //await userTest.pipeline('Rave With Grin');
-    //await matchData.processMatchList(10);
+    await matchData.processMatchList(10);
     //webserver.start();
+    db.end();
 };
 
 main();

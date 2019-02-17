@@ -1,6 +1,6 @@
-import { all } from 'bluebird';
+var Promise = require('bluebird');
 
-export default function(logger, api, db) {
+module.exports = function(logger, api, db) {
     var getChampions = async function() {
         logger.debug('Getting champions from API');
         var championsResult = await api.static.champions();
@@ -26,7 +26,7 @@ export default function(logger, api, db) {
             for (var key in champions) {
                 championPromises.push(db.insert.champions(champions[key]));
             }
-            await all(championPromises);
+            await Promise.all(championPromises);
             logger.info('Done inserting champions');
         }
     };
@@ -49,7 +49,7 @@ export default function(logger, api, db) {
                 };
                 itemPromises.push(db.insert.items(item));
             }
-            await all(itemPromises);
+            await Promise.all(itemPromises);
             logger.info('Done inserting items');
         }
     };
@@ -70,7 +70,7 @@ export default function(logger, api, db) {
                 };
                 mapPromises.push(db.insert.maps(map));
             }
-            await all(mapPromises);
+            await Promise.all(mapPromises);
             logger.info('Done inserting maps');
         }
     };
@@ -104,7 +104,7 @@ export default function(logger, api, db) {
                     }
                 }
             }
-            await all(runePromises);
+            await Promise.all(runePromises);
             logger.info('Done inserting runes');
         }
     };
@@ -128,7 +128,7 @@ export default function(logger, api, db) {
                 };
                 spellPromises.push(db.insert.summonerSpells(spell));
             }
-            await all(spellPromises);
+            await Promise.all(spellPromises);
             logger.info('Done inserting spells');
         }
     };
@@ -157,7 +157,7 @@ export default function(logger, api, db) {
                 }
             }
         }
-        await all(skinsPromises);
+        await Promise.all(skinsPromises);
         logger.info('Done inserting skins');
     };
 
@@ -174,7 +174,7 @@ export default function(logger, api, db) {
         staticDataPromises.push(getRunes());
         staticDataPromises.push(getSpells());
         staticDataPromises.push(getSkins());
-        await all(staticDataPromises);
+        await Promise.all(staticDataPromises);
         logger.info('Done getting static data');
     };
 
@@ -188,4 +188,4 @@ export default function(logger, api, db) {
         getVersion: getVersion,
         getAll: getAll
     };
-}
+};

@@ -1,8 +1,8 @@
-﻿import riotRateLimiter from 'riot-ratelimiter';
+﻿var riotRateLimiter = require('riot-ratelimiter');
 var limiter = new riotRateLimiter();
-import { get as _get } from 'request-promise';
+var request = require('request-promise');
 
-export default function(logger) {
+module.exports = function(logger) {
     var currentVersion = null;
 
     var callRiotAPI = async function(url, region = 'na1') {
@@ -29,7 +29,7 @@ export default function(logger) {
     var ddragonVersion = async function() {
         if (!currentVersion) {
             logger.silly('https://ddragon.leagueoflegends.com/api/versions.json');
-            var response = await _get('https://ddragon.leagueoflegends.com/api/versions.json');
+            var response = await request.get('https://ddragon.leagueoflegends.com/api/versions.json');
             logger.silly(JSON.stringify(response));
             currentVersion = JSON.parse(response)[0];
         }
@@ -41,7 +41,7 @@ export default function(logger) {
         var version = await ddragonVersion();
         var requestURL = baseURL + version + '/data/en_US/' + url;
         logger.silly(requestURL);
-        var response = await _get(requestURL);
+        var response = await request.get(requestURL);
         logger.silly(JSON.stringify(response));
         return { data: JSON.parse(response) };
     };
@@ -106,4 +106,4 @@ export default function(logger) {
         match: match,
         ddragonVersion: ddragonVersion
     };
-}
+};

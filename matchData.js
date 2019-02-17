@@ -1,6 +1,6 @@
-import { all } from 'bluebird';
+var Promise = require('bluebird');
 
-export default function(logger, api, db) {
+module.exports = function(logger, api, db) {
     var flattenObject = function(obj) {
         var toReturn = {};
         for (var i in obj) {
@@ -36,7 +36,7 @@ export default function(logger, api, db) {
                         var game = newGames[i];
                         matchPromises.push(getMatch(game));
                     }
-                    await all(matchPromises);
+                    await Promise.all(matchPromises);
                     logger.info('Inserted [' + newGames.length + '] into DB');
                     if (newGames.length !== limit) {
                         logger.info('All games in DB processed');
@@ -93,7 +93,7 @@ export default function(logger, api, db) {
                 summonerPromises.push(db.insert.summoner(summoner));
             }
         }
-        await all(summonerPromises);
+        await Promise.all(summonerPromises);
         logger.debug('Done inserting match summoners');
         return summoners;
     };
@@ -175,7 +175,7 @@ export default function(logger, api, db) {
                         logger.debug('Getting match matchId=[' + match + '] for summoner summonerName=[' + summoner.name + ']');
                         matchListPromises.push(db.insert.matchList(match));
                     }
-                    await all(matchListPromises);
+                    await Promise.all(matchListPromises);
                     logger.info('Inserted [' + matchList.length + '] matches for summoner summonerName=[' + summoner.name + '] into DB');
                 }
             }
@@ -187,4 +187,4 @@ export default function(logger, api, db) {
         getMatch: getMatch,
         fetchNewMatches: fetchNewMatches
     };
-}
+};
