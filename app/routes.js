@@ -1,6 +1,6 @@
-﻿var path = require('path');
+﻿import { join } from 'path';
 
-module.exports = function(app, logger, staticData, userData, matchData, db) {
+export default function(app, logger, staticData, userData, matchData, db) {
     app.get('/', function(req, res) {
         res.render('index.ejs');
     });
@@ -81,15 +81,15 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
     });
 
     app.get(/^(\/static\/.+)$/, function(req, res) {
-        res.sendFile(path.join(__dirname, '../', req.params[0]));
+        res.sendFile(join(__dirname, '../', req.params[0]));
     });
 
     app.get(/^(\/views\/.+)$/, function(req, res) {
-        res.sendFile(path.join(__dirname, '../', req.params[0]));
+        res.sendFile(join(__dirname, '../', req.params[0]));
     });
 
     app.get(/^(\/images\/.+)$/, function(req, res) {
-        res.sendFile(path.join(__dirname, '../', req.params[0]));
+        res.sendFile(join(__dirname, '../', req.params[0]));
     });
 
     app.ws('/summoner', function(ws, req) {
@@ -250,4 +250,4 @@ module.exports = function(app, logger, staticData, userData, matchData, db) {
             }
         }
     };
-};
+}

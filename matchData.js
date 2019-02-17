@@ -1,6 +1,6 @@
-var Promise = require('bluebird');
+import { all } from 'bluebird';
 
-module.exports = function(logger, api, db) {
+export default function(logger, api, db) {
     var flattenObject = function(obj) {
         var toReturn = {};
         for (var i in obj) {
@@ -19,28 +19,33 @@ module.exports = function(logger, api, db) {
     };
 
     var processMatchList = async function(limit = 1) {
-        logger.info('Getting non-processed matches from DB');
-        logger.debug('Getting [' + limit + '] game(s) from DB');
-        var newGames = await db.select.newGames(limit);
-        if (newGames.error) {
-            logger.error('Unable to get new games from DB');
-        } else {
-            newGames = newGames.data;
-            logger.debug('Got [' + newGames.length + '] game(s) from DB');
-            var matchPromises = [];
-            for (var i = 0; i < newGames.length; i++) {
-                var game = newGames[i];
-                matchPromises.push(getMatch(game));
-            }
-            await Promise.all(matchPromises);
-            logger.info('Inserted [' + newGames.length + '] into DB');
-            logger.info('Waiting 5s');
-            if (newGames.length === limit) {
-                setTimeout(function() {
-                    processMatchList(limit);
-                }, 5000);
-            } else {
-                logger.info('All games in DB processed');
+        var matchesToProcess = true;
+        while (matchesToProcess) {
+            try {
+                logger.info('Getting non-processed matches from DB');
+                logger.debug('Getting [' + limit + '] game(s) from DB');
+                var newGames = await db.select.newGames(limit);
+                if (newGames.error) {
+                    logger.error('Unable to get any new games from DB');
+                    matchesToPorcess = false;
+                } else {
+                    newGames = newGames.data;
+                    logger.debug('Got [' + newGames.length + '] game(s) from DB');
+                    var matchPromises = [];
+                    for (var i = 0; i < newGames.length; i++) {
+                        var game = newGames[i];
+                        matchPromises.push(getMatch(game));
+                    }
+                    await all(matchPromises);
+                    logger.info('Inserted [' + newGames.length + '] into DB');
+                    if (newGames.length !== limit) {
+                        logger.info('All games in DB processed');
+                        matchesToProcess = false;
+                    }
+                }
+            } catch (error) {
+                logger.error(error);
+                matchesToProcess = false;
             }
         }
     };
@@ -49,10 +54,12 @@ module.exports = function(logger, api, db) {
         logger.debug('Parsing summoners for match matchId=[' + gameId + ']');
         var summonerIds = [];
         var summoners = {};
-        for (var id in participantIdentities) {
-            summoners[parseInt(id) + 1] = 0;
-            if (participantIdentities[id].player.hasOwnProperty('summonerId')) {
-                summonerIds.push(participantIdentities[id].player.summonerId);
+        for (var i = 0; i < participantIdentities.length; i++) {
+            var participant = participantIdentities[i];
+            summoners[parseInt(participant.participantId)] = 0;
+            if (participant.player.hasOwnProperty('summonerId')) {
+                summonerIds.push(participant.player.summonerId);
+                summoners[parseInt(participant.participantId)] = participant.player.summonerId;
             }
         }
         logger.debug('Getting known summoners from DB for match matchId=[' + gameId + '] from DB');
@@ -86,7 +93,8 @@ module.exports = function(logger, api, db) {
                 summonerPromises.push(db.insert.summoner(summoner));
             }
         }
-        await Promise.all(summonerPromises);
+        await all(summonerPromises);
+        logger.debug('Done inserting match summoners');
         return summoners;
     };
 
@@ -167,7 +175,7 @@ module.exports = function(logger, api, db) {
                         logger.debug('Getting match matchId=[' + match + '] for summoner summonerName=[' + summoner.name + ']');
                         matchListPromises.push(db.insert.matchList(match));
                     }
-                    await Promise.all(matchListPromises);
+                    await all(matchListPromises);
                     logger.info('Inserted [' + matchList.length + '] matches for summoner summonerName=[' + summoner.name + '] into DB');
                 }
             }
@@ -179,4 +187,4 @@ module.exports = function(logger, api, db) {
         getMatch: getMatch,
         fetchNewMatches: fetchNewMatches
     };
-};
+}

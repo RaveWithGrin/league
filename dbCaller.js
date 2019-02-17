@@ -1,26 +1,31 @@
-var database = require('./config/database');
-var mysql = require('promise-mysql');
+import { connection as _connection } from './config/database';
+import { escape } from 'sqlstring';
+import { createPool } from 'mariadb';
 
-module.exports = function(logger) {
-    var pool = mysql.createPool(database.connection);
+export default function(logger) {
+    var pool = createPool(_connection);
 
     var runQuery = async function(sql, options) {
         try {
             var connection = await pool.getConnection();
             try {
                 logger.silly(sql);
-                logger.silly(options);
+                logger.silly(JSON.stringify(options));
                 var result = await connection.query(sql, options);
                 logger.silly(JSON.stringify(result));
                 return { data: result };
             } catch (error) {
+                logger.error(sql);
+                logger.error(JSON.stringify(options));
                 logger.error(JSON.stringify(error));
+                throw error;
                 return { error: error };
             } finally {
-                connection.release();
+                connection.end();
             }
         } catch (error) {
             logger.error(JSON.stringify(error));
+            throw error;
             return { error: error };
         }
     };
@@ -124,7 +129,7 @@ module.exports = function(logger) {
             return await runQuery('SELECT * FROM summoner WHERE name IN [?]', usernames);
         },
         summonerByIds: async function(ids) {
-            return await runQuery('SELECT * FROM summoner WHERE id IN (?) ORDER BY id ASC', [ids]);
+            return await runQuery('SELECT * FROM summoner WHERE id IN ' + escape([ids]) + ' ORDER BY id ASC');
         },
         championMasteries: async function(summonerId) {
             return await runQuery(
@@ -203,9 +208,10 @@ module.exports = function(logger) {
                         delete participant.timeline;
                         logger.silly('INSERT INTO participants SET ?');
                         logger.silly(JSON.stringify(participant));
-                        participantPromises.push(await connection.query('INSERT INTO participants SET ?', participant));
+                        //participantPromises.push(connection.query('INSERT INTO participants SET ?', participant));
+                        await connection.query('INSERT INTO participants SET ?', participant);
                     }
-                    await Promise.all(participantPromises);
+                    //await Promise.all(participantPromises);
                     logger.debug('Participants + stats + timeline inserted for match matchId=[' + gameId + '] into DB');
                     logger.debug('Updating match matchId=[' + gameId + '] in DB');
                     await connection.query('UPDATE matches SET ? WHERE id = ?', [match.match, gameId]);
@@ -226,10 +232,20 @@ module.exports = function(logger) {
         }
     };
 
+    var end = async function() {
+        try {
+            await pool.end();
+            logger.info('DB pool closed');
+        } catch (error) {
+            logger.error(error);
+        }
+    };
+
     return {
         insert: insert,
         update: update,
         select: select,
-        transaction: transaction
+        transaction: transaction,
+        end: end
     };
-};
+}

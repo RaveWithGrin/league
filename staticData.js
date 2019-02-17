@@ -1,6 +1,6 @@
-var Promise = require('bluebird');
+import { all } from 'bluebird';
 
-module.exports = function(logger, api, db) {
+export default function(logger, api, db) {
     var getChampions = async function() {
         logger.debug('Getting champions from API');
         var championsResult = await api.static.champions();
@@ -26,7 +26,7 @@ module.exports = function(logger, api, db) {
             for (var key in champions) {
                 championPromises.push(db.insert.champions(champions[key]));
             }
-            await Promise.all(championPromises);
+            await all(championPromises);
             logger.info('Done inserting champions');
         }
     };
@@ -49,7 +49,7 @@ module.exports = function(logger, api, db) {
                 };
                 itemPromises.push(db.insert.items(item));
             }
-            await Promise.all(itemPromises);
+            await all(itemPromises);
             logger.info('Done inserting items');
         }
     };
@@ -70,7 +70,7 @@ module.exports = function(logger, api, db) {
                 };
                 mapPromises.push(db.insert.maps(map));
             }
-            await Promise.all(mapPromises);
+            await all(mapPromises);
             logger.info('Done inserting maps');
         }
     };
@@ -86,9 +86,9 @@ module.exports = function(logger, api, db) {
             logger.debug('Inserting runes into DB');
             for (var i = 0; i < runesResult.length; i++) {
                 var path = runesResult[i];
-                for (var j = 0; j < path.slots.length; j++){
+                for (var j = 0; j < path.slots.length; j++) {
                     var slot = path.slots[j];
-                    for (var k = 0; k < slot.runes.length; k++){
+                    for (var k = 0; k < slot.runes.length; k++) {
                         var rawRune = slot.runes[k];
                         var rune = {
                             id: rawRune.id,
@@ -104,7 +104,7 @@ module.exports = function(logger, api, db) {
                     }
                 }
             }
-            await Promise.all(runePromises);
+            await all(runePromises);
             logger.info('Done inserting runes');
         }
     };
@@ -128,7 +128,7 @@ module.exports = function(logger, api, db) {
                 };
                 spellPromises.push(db.insert.summonerSpells(spell));
             }
-            await Promise.all(spellPromises);
+            await all(spellPromises);
             logger.info('Done inserting spells');
         }
     };
@@ -157,7 +157,7 @@ module.exports = function(logger, api, db) {
                 }
             }
         }
-        await Promise.all(skinsPromises);
+        await all(skinsPromises);
         logger.info('Done inserting skins');
     };
 
@@ -165,7 +165,7 @@ module.exports = function(logger, api, db) {
         return await api.ddragonVersion();
     };
 
-    var getAll = async function(){
+    var getAll = async function() {
         logger.info('Getting all static data');
         var staticDataPromises = [];
         staticDataPromises.push(getChampions());
@@ -174,7 +174,7 @@ module.exports = function(logger, api, db) {
         staticDataPromises.push(getRunes());
         staticDataPromises.push(getSpells());
         staticDataPromises.push(getSkins());
-        await Promise.all(staticDataPromises);
+        await all(staticDataPromises);
         logger.info('Done getting static data');
     };
 
@@ -188,4 +188,4 @@ module.exports = function(logger, api, db) {
         getVersion: getVersion,
         getAll: getAll
     };
-};
+}

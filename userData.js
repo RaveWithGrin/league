@@ -1,6 +1,6 @@
-var Promise = require('bluebird');
+import { all } from 'bluebird';
 
-module.exports = function(logger, api, db) {
+export default function(logger, api, db) {
     var summoner = {
         get: async function(name) {
             logger.debug('Getting summoner summonerName=[' + name + '] from API');
@@ -45,7 +45,7 @@ module.exports = function(logger, api, db) {
                 var mastery = masteriesArray[i];
                 masteriesPromises.push(db.insert.championMasteries(mastery));
             }
-            await Promise.all(masteriesPromises);
+            await all(masteriesPromises);
             logger.info('Done inserting champion masteries for summonerName=[' + summonerName + '] into DB');
             return { data: 'Done' };
         }
@@ -66,11 +66,11 @@ module.exports = function(logger, api, db) {
         save: async function(summoner, leaguesArray) {
             var leaguesPromises = [];
             logger.debug('Inserting league positions for summonerName=[' + summoner.name + '] into DB');
-            for (var i = 0; i < leaguesArray; i++) {
+            for (var i = 0; i < leaguesArray.length; i++) {
                 var league = leaguesArray[i];
                 leaguesPromises.push(db.insert.leaguePosition(league));
             }
-            await Promise.all(leaguesPromises);
+            await all(leaguesPromises);
             logger.info('Done inserting league positions for summonerName=[' + summoner.name + '] into DB');
             return { data: 'Done' };
         }
@@ -83,8 +83,10 @@ module.exports = function(logger, api, db) {
             if (recentMatch.error) {
                 logger.error('Error getting most recent gameId for summonerName=[' + summoner.name + '] from DB');
                 recentMatch = 0;
-            } else {
+            } else if (recentMatch.data.length > 0) {
                 recentMatch = recentMatch.data[0].gameId;
+            } else {
+                recentMatch = 0;
             }
             logger.debug('Getting match list for summonerName=[' + summoner.name + '] from API');
             var matchListArray = [];
@@ -113,8 +115,9 @@ module.exports = function(logger, api, db) {
                     return { data: matchListArray };
                 } else {
                     while (totalGames > endIndex) {
+                        newGameFound = false;
                         logger.debug('Getting more matches for summonerName=[' + summoner.name + '] from API');
-                        matchlistResponse = await api.summoner.matchList(summoner.accountId, endIndex + 1);
+                        matchlistResponse = await api.summoner.matchList(summoner.accountId, endIndex);
                         if (matchlistResponse.error) {
                             logger.error('Error getting match list for summonerName=[' + summoner.name + '] from API');
                             return matchlistResponse;
@@ -132,7 +135,7 @@ module.exports = function(logger, api, db) {
                             endIndex = rawMatchlist.endIndex;
                             if (!newGameFound) {
                                 totalGames = endIndex;
-                            } else if (matchListArray.length < endIndex) {
+                            } else if (matchListArray.length < endIndex - 1) {
                                 totalGames = endIndex;
                             }
                         }
@@ -149,7 +152,7 @@ module.exports = function(logger, api, db) {
                 match.playerId = summoner.id;
                 matchlistPromises.push(db.insert.matchList(match));
             }
-            await Promise.all(matchlistPromises);
+            await all(matchlistPromises);
             logger.info('Done inserting all matches for summonerName=[' + summoner.name + '] into DB');
             return { data: 'Done' };
         },
@@ -168,7 +171,7 @@ module.exports = function(logger, api, db) {
                     match.playerId = summoner.id;
                     matchlistPromises.push(db.insert.matchList(match));
                 }
-                await Promise.all(matchlistArray);
+                await all(matchlistArray);
                 if (!full) {
                     logger.info('Done inserting recent matches for summonerName=[' + summoner.name + '] into DB');
                     return { data: 'Done' };
@@ -191,7 +194,7 @@ module.exports = function(logger, api, db) {
                                 match.playerId = summoner.id;
                                 matchlistPromises.push(db.insert.matchList(match));
                             }
-                            await Promise.all(matchlistPromises);
+                            await all(matchlistPromises);
                             logger.info('Done inserting more matches for summonerName=[' + summoner.name + '] into DB');
                             totalGames = JSON.parse(matchlistResponse.data).totalGames;
                             endIndex = JSON.parse(matchlistResponse.data).endIndex;
@@ -210,4 +213,4 @@ module.exports = function(logger, api, db) {
         leaguePosition: leaguePosition,
         matchList: matchList
     };
-};
+}
