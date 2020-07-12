@@ -16,7 +16,7 @@
     "express": "^4.14.0",
     "express-ws": "^4.0.0",
     "mariadb": "^2.0.2-rc",
-    "morgan": "^1.7.0",
+    "morgan": "^1.9.1",
     "promise-mysql": "^3.2.1",
     "pug": "^2.0.0-beta6",
     "request": "^2.87.0",
