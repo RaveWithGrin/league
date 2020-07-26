@@ -87,7 +87,7 @@ module.exports = function(logger) {
             return await callRiotAPI('/lol/champion-mastery/v4/champion-masteries/by-summoner/' + summonerId);
         },
         leaguePosition: async function(summonerId) {
-            return await callRiotAPI('/lol/league/v4/positions/by-summoner/' + summonerId);
+            return await callRiotAPI('/lol/league/v4/entries/by-summoner/' + summonerId);
         }
     };
 
